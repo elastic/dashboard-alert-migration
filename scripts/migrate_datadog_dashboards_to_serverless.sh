@@ -81,8 +81,6 @@ fi
   --input-dir "${STAGE}" \
   --output-dir "${OUT}" \
   --field-profile otel \
-  --data-view "metrics-generic.otel-*" \
-  --dataset-filter "generic.otel" \
   --logs-index "logs-*" \
   "${ES_ES_ARGS[@]}" \
   --upload \

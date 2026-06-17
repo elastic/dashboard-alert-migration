@@ -34,8 +34,30 @@ for a in "$@"; do
   esac
 done
 
+UPSTREAM_REPO="${MIG_TO_KBN_GIT_URL:-https://github.com/elastic/observability-migration-platform.git}"
+LOCK_FILE="${ROOT}/mig-to-kbn-upstream.lock"
+
 _git_in_mig() {
   git -C "$MIG" "$@"
+}
+
+_write_upstream_lock() {
+  local git_dir="$1"
+  local commit subject
+  commit="$(git -C "$git_dir" rev-parse HEAD)"
+  subject="$(git -C "$git_dir" log -1 --format=%s)"
+  cat >"${LOCK_FILE}" <<EOF
+# Unmodified snapshot from elastic/observability-migration-platform (workshop directory: mig-to-kbn/)
+# Refresh: ./scripts/update_mig_to_kbn.sh
+# Verify:  ./scripts/verify_mig_to_kbn_upstream.sh
+
+repository=${UPSTREAM_REPO%.git}
+ref=${REF}
+commit=${commit}
+subject=${subject}
+updated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+EOF
+  echo "==> Recorded upstream pin: ${commit:0:12} (${REF}) → ${LOCK_FILE}"
 }
 
 _is_submodule() {
@@ -101,6 +123,7 @@ update_via_vendored_tree() {
   TDIR="$(mktemp -d)"
   UP="${TDIR}/upstream"
   _clone_upstream_mig_to_kbn "$UP"
+  _write_upstream_lock "$UP"
   rsync -a --delete --exclude='.git' "${UP}/" "${MIG}/"
   rm -rf "${TDIR}"
   return 0
@@ -137,9 +160,14 @@ else
 fi
 
 if [ -d "${MIG}/.git" ]; then
+  _write_upstream_lock "$MIG"
   echo "==> mig-to-kbn now at: $(_git_in_mig log -1 --oneline)"
 else
   echo "==> mig-to-kbn vendored tree updated (commit mig-to-kbn/ in the parent repo)."
+fi
+
+if [ -x "${ROOT}/scripts/verify_mig_to_kbn_upstream.sh" ]; then
+  bash "${ROOT}/scripts/verify_mig_to_kbn_upstream.sh"
 fi
 
 if [ "$REINSTALL" = "1" ]; then
@@ -147,5 +175,5 @@ if [ "$REINSTALL" = "1" ]; then
   bash "${ROOT}/scripts/install_workshop_mig_to_kbn.sh"
 fi
 
-echo "OK: Next: git add mig-to-kbn && git commit, then ./scripts/push_git_and_instruqt.sh"
+echo "OK: Next: git add mig-to-kbn mig-to-kbn-upstream.lock && git commit, then ./scripts/push_git_and_instruqt.sh"
 echo "     On Instruqt VM after sync: source ~/.bashrc && sudo bash scripts/install_workshop_mig_to_kbn.sh   # if you have mig-to-kbn in the tree"
