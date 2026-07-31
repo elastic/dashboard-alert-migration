@@ -84,7 +84,7 @@ Both lab scripts call upstream **`grafana-migrate`** / **`datadog-migrate`** con
 
 ### Known gaps (upstream)
 
-Some panels still fail on **`counter_long`** aggregations (**SUM** / **MAX** / **MIN** on counter-typed fields). Tracked in **[observability-migration-platform#148](https://github.com/elastic/observability-migration-platform/issues/148)**. Missing **field** errors on Datadog dashboards are largely addressed by the expanded fleet emitters + **`--field-profile otel`**.
+Some Datadog panels used to fail on **`counter_long`** aggregations (**SUM** / **MAX** / **MIN**). Upstream: **[observability-migration-platform#148](https://github.com/elastic/observability-migration-platform/issues/148)**. Workshop fleet emits Datadog **rate-shaped** infra metrics as **gauges** so those panels render; HTTP/PromQL series remain counters.
 
 ## Path B — legacy workshop Python pipeline (facilitators)
 
