@@ -24,6 +24,9 @@ export type Slide = {
    * URL respects Vite `base` (GitHub Pages project path).
    */
   videoSrc?: string;
+  /** Optional source citation under the slide body */
+  sourceLabel?: string;
+  sourceUrl?: string;
 };
 
 const INSTRUQT_INVITE = "https://play.instruqt.com/elastic/invite/fmt96ftdm41w";
@@ -65,6 +68,95 @@ const SLIDES: Slide[] = [
       "Adopt metrics in a browser sandbox: live OTLP → Kibana dashboards and alert drafts — no install required.",
     workshopUrl: INSTRUQT_INVITE,
     workshopLinkLabel: "Launch Elastic sandbox (Instruqt)",
+  },
+  {
+    title: "Why migrate Grafana & Datadog boards?",
+    subtitle:
+      "Dashboards and alerts are operational IP. Leaving them stranded means dual tooling, dual on-call, and slower incident response.",
+    statCards: [
+      {
+        figure: "1",
+        title: "Operations plane",
+        caption:
+          "Stop pivoting between Grafana/Datadog UIs and Kibana for the same incident — metrics, logs, and traces in one place.",
+      },
+      {
+        figure: "IP",
+        title: "Keep what you built",
+        caption:
+          "Years of PromQL panels and Datadog monitors are assets. Migration preserves intent instead of rebuilding every chart by hand.",
+      },
+      {
+        figure: "Gov",
+        title: "Draft → approve → enforce",
+        caption:
+          "Alert definitions become Kibana rule drafts so SREs and SecOps review thresholds and connectors before go-live.",
+      },
+      {
+        figure: "4–10×",
+        title: "Less rebuild work",
+        caption:
+          "Bulk conversion + Dashboards API publish compresses analyst-days of hand recreation into scripted, reviewable waves.",
+      },
+      {
+        figure: "CI",
+        title: "Repeatable cutover",
+        caption:
+          "Exports + automation fit the same IaC discipline you already use — rerun, diff, and promote across environments.",
+      },
+      {
+        figure: "OTLP",
+        title: "Open ingest path",
+        caption:
+          "Standardize on OpenTelemetry while dual-publishing; migrate the UI/alert layer when the data plane is ready.",
+      },
+    ],
+  },
+  {
+    title: "Elastic Metrics: columnar engine",
+    subtitle:
+      "Elasticsearch is now a leading columnar metrics datastore — store OTel metrics next to logs and traces with no compromise.",
+    statCards: [
+      {
+        figure: "30×",
+        title: "Faster queries vs Prometheus",
+        caption:
+          "Up to 30× better query performance vs Prometheus, Mimir, and ClickHouse on competitive benchmarks.",
+      },
+      {
+        figure: "3.75 B",
+        title: "Per OTel data point",
+        caption:
+          "Storage down from ~25 bytes/point a year ago — up to 6.6× more efficient TSDS packing for high-cardinality metrics.",
+      },
+      {
+        figure: "2.5×",
+        title: "Better storage efficiency",
+        caption:
+          "Exceeds dedicated metrics stores on footprint while keeping Elasticsearch’s unified data model.",
+      },
+      {
+        figure: "50%",
+        title: "Higher indexing throughput",
+        caption:
+          "OTel/protobuf entrypoints + doc-value skippers cut CPU and I/O on the hot ingest path.",
+      },
+      {
+        figure: "160×",
+        title: "Query latency wins",
+        caption:
+          "Vectorized ES|QL time-series compute (TS + RATE + TBUCKET) vs prior TSDS aggregation paths.",
+      },
+      {
+        figure: "ES|QL",
+        title: "Beyond PromQL alone",
+        caption:
+          "Inline stats, lookup joins, and one language across metrics, logs, and traces — what siloed PromQL stacks cannot do.",
+      },
+    ],
+    sourceLabel: "Elasticsearch Labs — columnar metrics engine",
+    sourceUrl:
+      "https://www.elastic.co/search-labs/blog/elasticsearch-columnar-metrics-engine-30x-faster-prometheus",
   },
   {
     title: "Why existing Elastic customers deepen metrics",
@@ -331,6 +423,19 @@ export function SlideDeck() {
                   </li>
                 ))}
               </ul>
+            ) : null}
+            {slide.sourceUrl ? (
+              <p className="mx-auto mt-8 max-w-3xl font-mono text-xs text-zinc-500">
+                Source:{" "}
+                <a
+                  href={slide.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--primary)] underline decoration-white/20 underline-offset-2 hover:decoration-[var(--primary)]"
+                >
+                  {slide.sourceLabel ?? slide.sourceUrl}
+                </a>
+              </p>
             ) : null}
           </div>
         </main>

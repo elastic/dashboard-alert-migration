@@ -35,6 +35,54 @@ notes:
     Track **bootstrap** creates the project, wires **nginx → Kibana**, and starts **Alloy + emitters** when **mOTLP** and an **API key** are available.
 - type: text
   contents: |
+    ## Why migrate Grafana & Datadog dashboards and alerts?
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0;">
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;">
+    <div style="font-size:1.75rem;font-weight:800;color:#60a5fa;">1 plane</div>
+    <div style="font-size:0.85rem;margin-top:6px;color:#e2e8f0;"><b>One operations UI</b><br/>Stop pivoting Grafana/Datadog ↔ Kibana mid-incident.</div>
+    </div>
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;">
+    <div style="font-size:1.75rem;font-weight:800;color:#60a5fa;">IP</div>
+    <div style="font-size:0.85rem;margin-top:6px;color:#e2e8f0;"><b>Keep what you built</b><br/>PromQL panels & monitors are assets — migrate intent, don’t redraw every chart.</div>
+    </div>
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;">
+    <div style="font-size:1.75rem;font-weight:800;color:#60a5fa;">Gov</div>
+    <div style="font-size:0.85rem;margin-top:6px;color:#e2e8f0;"><b>Draft → approve</b><br/>Alerts land as Kibana rule drafts before enforcement.</div>
+    </div>
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;">
+    <div style="font-size:1.75rem;font-weight:800;color:#60a5fa;">4–10×</div>
+    <div style="font-size:0.85rem;margin-top:6px;color:#e2e8f0;"><b>Less rebuild work</b><br/>Bulk convert + API publish vs hand-recreating boards.</div>
+    </div>
+    </div>
+- type: text
+  contents: |
+    ## Elastic Metrics — columnar engine
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0;">
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;text-align:center;">
+    <div style="font-size:2rem;font-weight:800;color:#34d399;">30×</div>
+    <div style="font-size:0.8rem;color:#cbd5e1;margin-top:4px;">Faster queries vs Prometheus*</div>
+    </div>
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;text-align:center;">
+    <div style="font-size:2rem;font-weight:800;color:#34d399;">3.75 B</div>
+    <div style="font-size:0.8rem;color:#cbd5e1;margin-top:4px;">Per OTel data point</div>
+    </div>
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;text-align:center;">
+    <div style="font-size:2rem;font-weight:800;color:#34d399;">2.5×</div>
+    <div style="font-size:0.8rem;color:#cbd5e1;margin-top:4px;">Better storage efficiency*</div>
+    </div>
+    <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;text-align:center;">
+    <div style="font-size:2rem;font-weight:800;color:#34d399;">ES|QL</div>
+    <div style="font-size:0.8rem;color:#cbd5e1;margin-top:4px;">Metrics + logs + traces</div>
+    </div>
+    </div>
+
+    *Competitive benchmarks vs Prometheus / Mimir / ClickHouse — [Elasticsearch Labs](https://www.elastic.co/search-labs/blog/elasticsearch-columnar-metrics-engine-30x-faster-prometheus).
+
+    **Next slide:** what you will run in this lab.
+- type: text
+  contents: |
     ## This lab
 
     Accelerate metrics adoption: **20** Grafana-shaped / PromQL metric dashboards + **workshop alerts** → **[observability-migration-platform](https://github.com/elastic/observability-migration-platform)** **`grafana-migrate`** → Kibana on live **`metrics-*`**. Run **one command** in **Terminal** when the sandbox is ready.
