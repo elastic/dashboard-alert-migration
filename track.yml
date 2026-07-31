@@ -15,9 +15,9 @@ tags:
 - elastic
 - co.elastic.workshops.production.grafana_datadog_elastic_serverless
 - observability-migration-platform
+- metrics-adoption
 - opentelemetry
 - serverless
-- metrics-adoption
 - migration
 - observability
 - co.elastic.workshops
@@ -44,5 +44,5 @@ lab_config:
   hideStopButton: false
   default_layout: AssignmentRight
   default_layout_sidebar_size: 35
-checksum: "13505692840693886849"
+checksum: "15195874306516802224"
 enhanced_loading: false
