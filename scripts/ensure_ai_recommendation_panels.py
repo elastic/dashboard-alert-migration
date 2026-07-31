@@ -243,26 +243,67 @@ def markdown_panel(platform: str, box: tuple[int, int, int, int]) -> dict:
     }
 
 
+def _add_title_id(out: dict[str, list[str]], title: str, did: str) -> None:
+    title = (title or "").strip()
+    if not did or not title:
+        return
+    ids = out.setdefault(title, [])
+    if did not in ids:
+        ids.append(did)
+
+
 def list_dashboards_by_title() -> dict[str, list[str]]:
-    """Return {title: [id, ...]} — titles can collide across labs (e.g. Latency p95)."""
-    payload, status = kbn("GET", "/api/dashboards?apiVersion=1")
+    """Return {title: [id, ...]} from Dashboards API, with saved-objects fallback."""
     out: dict[str, list[str]] = {}
-    if status != 200 or not isinstance(payload, dict):
-        return out
-    for row in payload.get("dashboards") or []:
-        if not isinstance(row, dict):
-            continue
-        did = row.get("id")
-        data = row.get("data") or {}
-        title = (data.get("title") or "").strip()
-        if did and title:
-            out.setdefault(title, []).append(did)
+
+    payload, status = kbn("GET", "/api/dashboards")
+    if status == 200 and isinstance(payload, dict):
+        for row in payload.get("dashboards") or []:
+            if not isinstance(row, dict):
+                continue
+            data = row.get("data") or {}
+            _add_title_id(out, data.get("title") or "", row.get("id") or "")
+        if out:
+            print(f"  · listed {sum(len(v) for v in out.values())} dashboard(s) via /api/dashboards")
+            return out
+        print(f"  · /api/dashboards returned 0 titles (HTTP {status}); trying saved objects…")
+    else:
+        print(
+            f"  · /api/dashboards list failed HTTP {status}: {str(payload)[:200]} — trying saved objects…",
+            file=sys.stderr,
+        )
+
+    page = 1
+    per_page = 100
+    while page <= 20:
+        path_q = (
+            f"/api/saved_objects/_find?type=dashboard&per_page={per_page}"
+            f"&page={page}&fields=title"
+        )
+        payload, status = kbn("GET", path_q)
+        if status != 200 or not isinstance(payload, dict):
+            print(
+                f"  WARN: saved_objects/_find dashboards → HTTP {status}: {str(payload)[:300]}",
+                file=sys.stderr,
+            )
+            break
+        rows = payload.get("saved_objects") or []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            attrs = row.get("attributes") or {}
+            _add_title_id(out, attrs.get("title") or "", row.get("id") or "")
+        total = int(payload.get("total") or 0)
+        if page * per_page >= total or not rows:
+            break
+        page += 1
+    print(f"  · listed {sum(len(v) for v in out.values())} dashboard(s) via saved_objects")
     return out
 
 
 def get_dashboard(dash_id: str) -> dict | None:
     qid = urllib.parse.quote(dash_id, safe="")
-    payload, status = kbn("GET", f"/api/dashboards/{qid}?apiVersion=1")
+    payload, status = kbn("GET", f"/api/dashboards/{qid}")
     if status != 200 or not isinstance(payload, dict):
         return None
     return payload
@@ -277,16 +318,37 @@ def put_dashboard(dash_id: str, data: dict) -> bool:
     }
     if data.get("time_range"):
         body["time_range"] = data["time_range"]
-    _, status = kbn("PUT", f"/api/dashboards/{qid}?apiVersion=1", body)
-    return status in (200, 201)
+    payload, status = kbn("PUT", f"/api/dashboards/{qid}", body)
+    if status not in (200, 201):
+        print(
+            f"  · PUT /api/dashboards/{dash_id} → HTTP {status}: {str(payload)[:240]}",
+            file=sys.stderr,
+        )
+        return False
+    return True
 
 
 def post_dashboard(data: dict) -> str | None:
-    payload, status = kbn("POST", "/api/dashboards?apiVersion=1", data)
+    payload, status = kbn("POST", "/api/dashboards", data)
     if status not in (200, 201) or not isinstance(payload, dict):
         print(f"  WARN: POST dashboard → HTTP {status}: {str(payload)[:400]}", file=sys.stderr)
         return None
     return payload.get("id") or (payload.get("data") or {}).get("id")
+
+
+def clean_description(desc: str | None) -> str:
+    d = (desc or "").strip()
+    for junk in (
+        " — metrics adoption workshop board (What & why panel at top).",
+        " — metrics adoption workshop board (What & why note at top).",
+        "(What & why panel at top)",
+        "(What & why note at top)",
+    ):
+        d = d.replace(junk, "")
+    d = d.strip(" —")
+    if d and "AI notes" not in d:
+        return f"{d} — AI notes at bottom."
+    return d or "Metrics adoption workshop board — AI notes at bottom."
 
 
 def ensure_overview_dashboard(platforms: tuple[str, ...]) -> None:
@@ -317,11 +379,11 @@ def ensure_overview_dashboard(platforms: tuple[str, ...]) -> None:
     did = post_dashboard(body)
     if did:
         print(f"  ✓ created dashboard {OVERVIEW_TITLE!r} (id={did})")
-    else:
-        body.pop("id", None)
-        did = post_dashboard(body)
-        if did:
-            print(f"  ✓ created dashboard {OVERVIEW_TITLE!r} (id={did})")
+        return
+    body.pop("id", None)
+    did = post_dashboard(body)
+    if did:
+        print(f"  ✓ created dashboard {OVERVIEW_TITLE!r} (id={did})")
 
 
 def _panel_refs_markdown(panels: list) -> set[str]:
@@ -348,10 +410,10 @@ def is_static_what_why_panel(panel: dict) -> bool:
     """Detect legacy static What & why markdown / text (not library AI refs)."""
     if not isinstance(panel, dict):
         return False
-    cfg = panel.get("config") or {}
-    if cfg.get("ref_id"):
-        return False
+    cfg = panel.get("config") or panel.get("embeddableConfig") or {}
     title = str(panel.get("title") or cfg.get("title") or "").lower()
+    if cfg.get("ref_id") and "what & why" not in title:
+        return False
     blob = _panel_blob(panel)
     if "what & why" in title or title == "what and why":
         return True
@@ -381,45 +443,128 @@ def _max_panel_y(panels: list) -> int:
     return max_y
 
 
-def attach_ai_to_dashboard(platform: str, title: str, dash_id: str) -> None:
-    payload = get_dashboard(dash_id)
-    if not payload:
-        print(f"  WARN: could not GET {title!r} ({dash_id})", file=sys.stderr)
-        return
-    data = payload.get("data") or payload
-    panels = list(data.get("panels") or [])
+def _so_has_ai_ref(refs: list, sid: str) -> bool:
+    for r in refs or []:
+        if isinstance(r, dict) and r.get("type") == "markdown" and r.get("id") == sid:
+            return True
+    return False
+
+
+def attach_via_saved_object(platform: str, title: str, dash_id: str) -> bool:
+    """Patch classic Lens/saved-object dashboards (mig-to-kbn upload path)."""
+    qid = urllib.parse.quote(dash_id, safe="")
+    payload, status = kbn("GET", f"/api/saved_objects/dashboard/{qid}")
+    if status != 200 or not isinstance(payload, dict):
+        print(f"  · SO GET dashboard {title!r} → HTTP {status}: {str(payload)[:200]}", file=sys.stderr)
+        return False
+    attrs = dict(payload.get("attributes") or {})
+    try:
+        panels = json.loads(attrs.get("panelsJSON") or "[]")
+    except json.JSONDecodeError:
+        panels = []
+    if not isinstance(panels, list):
+        panels = []
+    refs = list(payload.get("references") or [])
     panels, removed = strip_static_what_why(panels)
+    keep_ref_names = {
+        p.get("panelRefName") for p in panels if isinstance(p, dict) and p.get("panelRefName")
+    }
+    refs = [
+        r
+        for r in refs
+        if not isinstance(r, dict)
+        or r.get("name") in keep_ref_names
+        or r.get("type") != "markdown"
+        or r.get("id") == rec_markdown_so_id(platform)
+    ]
+
     sid = rec_markdown_so_id(platform)
-    has_ai = sid in _panel_refs_markdown(panels)
-    changed = removed > 0
-    if not has_ai:
-        panels.append(markdown_panel(platform, (0, _max_panel_y(panels) + 1, 48, 14)))
-        changed = True
-    if not changed:
+    has_ai = _so_has_ai_ref(refs, sid) or sid in _panel_refs_markdown(panels)
+    if has_ai and removed == 0 and "What & why" not in (attrs.get("description") or ""):
         print(f"  ✓ {title!r} already has AI panel ({sid})")
-        return
-    data["panels"] = panels
-    if put_dashboard(dash_id, data):
-        bits = []
-        if removed:
-            bits.append(f"removed {removed} static What/why")
-        if not has_ai:
-            bits.append(f"attached {sid}")
-        print(f"  ✓ {title!r}: " + ", ".join(bits))
-    else:
-        print(
-            f"  WARN: could not PUT {title!r} (Lens layout may be API-incompatible)",
-            file=sys.stderr,
+        return True
+
+    if not has_ai:
+        panel_id = gid()
+        ref_name = f"panel_{panel_id.replace('-', '')[:12]}"
+        panels.append(
+            {
+                "type": "markdown",
+                "gridData": {
+                    "x": 0,
+                    "y": _max_panel_y(panels) + 1,
+                    "w": 48,
+                    "h": 12,
+                    "i": panel_id,
+                },
+                "panelIndex": panel_id,
+                "embeddableConfig": {"enhancements": {}, "hideTitle": False},
+                "title": "AI metrics adoption notes",
+                "panelRefName": ref_name,
+            }
         )
+        refs.append({"name": ref_name, "type": "markdown", "id": sid})
+
+    attrs["panelsJSON"] = json.dumps(panels)
+    attrs["description"] = clean_description(attrs.get("description"))
+    body = {"attributes": attrs, "references": refs}
+    ver = payload.get("version")
+    path_u = f"/api/saved_objects/dashboard/{qid}"
+    if ver:
+        path_u = f"{path_u}?version={urllib.parse.quote(str(ver), safe='')}"
+    result, status = kbn("PUT", path_u, body)
+    if status not in (200, 201):
+        print(f"  WARN: SO PUT {title!r} → HTTP {status}: {str(result)[:300]}", file=sys.stderr)
+        return False
+    bits = []
+    if removed:
+        bits.append(f"removed {removed} static What/why")
+    if not has_ai:
+        bits.append(f"attached {sid}")
+    bits.append("via saved_objects")
+    print(f"  ✓ {title!r}: " + ", ".join(bits))
+    return True
+
+
+def attach_ai_to_dashboard(platform: str, title: str, dash_id: str) -> None:
+    sid = rec_markdown_so_id(platform)
+    payload = get_dashboard(dash_id)
+    if payload:
+        data = payload.get("data") or payload
+        panels = list(data.get("panels") or [])
+        panels, removed = strip_static_what_why(panels)
+        has_ai = sid in _panel_refs_markdown(panels)
+        changed = removed > 0 or not has_ai
+        if not has_ai:
+            panels.append(markdown_panel(platform, (0, _max_panel_y(panels) + 1, 48, 14)))
+        data["panels"] = panels
+        data["description"] = clean_description(data.get("description"))
+        if not changed:
+            print(f"  ✓ {title!r} already has AI panel ({sid})")
+            return
+        if put_dashboard(dash_id, data):
+            bits = []
+            if removed:
+                bits.append(f"removed {removed} static What/why")
+            if not has_ai:
+                bits.append(f"attached {sid}")
+            print(f"  ✓ {title!r}: " + ", ".join(bits))
+            return
+        print(f"  · Dashboards API PUT failed for {title!r}; trying saved_objects…", file=sys.stderr)
+
+    if not attach_via_saved_object(platform, title, dash_id):
+        print(f"  WARN: could not attach AI panel to {title!r} ({dash_id})", file=sys.stderr)
 
 
 def attach_to_migrated_dashboards(platform: str) -> None:
     titles = ATTACH_TITLES.get(platform) or ()
     by_title = list_dashboards_by_title()
     attached = 0
+    missing = 0
     for title in titles:
         ids = by_title.get(title) or []
         if not ids:
+            missing += 1
             print(f"  · skip — dashboard {title!r} not found yet (run migrate first)")
             continue
         for dash_id in ids:
@@ -427,6 +572,9 @@ def attach_to_migrated_dashboards(platform: str) -> None:
             attached += 1
     if attached:
         print(f"  → processed {attached} {platform} dashboard(s)")
+    if missing and attached == 0:
+        sample = sorted(by_title.keys())[:8]
+        print(f"  · known dashboard titles sample: {sample}", file=sys.stderr)
 
 
 def seed_via_agent_builder(platforms: tuple[str, ...]) -> None:
@@ -458,7 +606,9 @@ def seed_via_agent_builder(platforms: tuple[str, ...]) -> None:
             "POST",
             f"/{REC_INDEX}/_doc",
             {
-                "@timestamp": __import__("datetime").datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "@timestamp": __import__("datetime").datetime.now(
+                    __import__("datetime").timezone.utc
+                ).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "execution_id": f"seed-{gid()}",
                 "workflow_name": "ensure_ai_recommendation_panels.py",
                 "source": "agent_builder_seed",
