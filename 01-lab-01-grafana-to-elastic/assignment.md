@@ -3,7 +3,8 @@ slug: lab-01-grafana-to-elastic
 id: 7xffw36spadb
 type: challenge
 title: Lab 1 — Adopt PromQL metric views on Elastic
-teaser: One command brings 20 PromQL/Grafana-shaped metric dashboards and alerts onto Kibana.
+teaser: One command brings 20 PromQL/Grafana-shaped metric dashboards and alerts onto
+  Kibana.
 notes:
 - type: text
   contents: |

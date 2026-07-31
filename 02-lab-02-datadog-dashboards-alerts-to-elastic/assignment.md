@@ -3,7 +3,8 @@ slug: lab-02-datadog-dashboards-alerts-to-elastic
 id: berxl591tjk4
 type: challenge
 title: Lab 2 — Adopt Datadog metric views & monitors
-teaser: One command brings 10 Datadog-shaped metric dashboards and four monitors onto Kibana.
+teaser: One command brings 10 Datadog-shaped metric dashboards and four monitors onto
+  Kibana.
 notes:
 - type: text
   contents: |
