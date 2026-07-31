@@ -121,61 +121,25 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-**Lab goal:** adopt Datadog-shaped **metric** boards and monitors onto Elastic with governance (rules imported **disabled** until you review).
-
-When the sandbox is ready, open **Terminal** and run:
+**Lab goal:** adopt **10** Datadog-shaped metric dashboards + **4** monitors (rules imported **disabled**) onto Elastic.
 
 ```bash
 bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh
 ```
 
-That single script:
-
-1. Starts (or reuses) the **OTLP** pipeline — Alloy → Elastic **mOTLP** (live **metrics**)
-2. Runs **`datadog-migrate`** on **10** Datadog JSON files in **`assets/datadog/dashboards/`** (`--field-profile otel`, uploads to Kibana)
-3. Converts **4** monitor JSON files under **`assets/datadog/`** and publishes **Rules** via **`publish_datadog_alert_drafts_kibana.py`** (imported **disabled**)
-
-The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — no **`cd`** or **`source`** needed first. Use the **absolute path** above so it works even if your shell left **`/root/workshop`**.
-
 ## Verify
 
-Open the **Elastic Serverless** tab:
+In **Elastic Serverless**:
 
-- **Dashboards** — titles from the Datadog exports; charts should populate from **`metrics-*`**
-- **AI notes** — each board gets a bottom **Agent Builder** markdown strip (`workshop-ai-rec-datadog`) updated by the **Metrics adoption — AI dashboard notes** workflow (same dbmonitoring pattern)
-- **Metrics adoption — AI notes** — Agent Builder markdown for Datadog-shaped metrics adoption (also on **Service overview** when attach succeeds)
-- **Observability → Rules** — four workshop rules (imported **disabled**; enable in the UI to test)
+- **Dashboards** — charts from **`metrics-*`**; scroll to the bottom for **AI notes** (`workshop-ai-rec-datadog`)
+- **Observability → Rules** — four workshop rules (imported **disabled**)
 
-Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes**, or in **Terminal**:
-
-```bash
-source ~/.bashrc
-cd /root/workshop && ./scripts/sync_workshop_from_git.sh
-python3 /root/workshop/scripts/deploy_workshop_workflows.py
-python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --platform datadog --seed-now
-```
-
-## Troubleshooting
-
-| Symptom | Fix |
-| --- | --- |
-| Empty charts | `bash /root/workshop/scripts/check_workshop_otel_pipeline.sh` then `bash /root/workshop/scripts/start_workshop_otel.sh` — wait ~1 min |
-| Still empty after migrate | Re-run migrate after OTLP is healthy; `cd /root/workshop && ./scripts/sync_workshop_from_git.sh` if files are stale |
-| Script not found | **Stop** → **Start** the track (wait for challenge to finish loading) |
-| `latency_p95` compile warning | Other dashboards still upload; refresh workshop files and re-run migrate |
-
-Optional pre-upload ES\|QL validation: `WORKSHOP_MIG_ES_VALIDATE=1 bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh`
-
-## Optional — integration dashboards
-
-Migrate **eight** official Agent integration dashboards from [DataDog/integrations-core](https://github.com/DataDog/integrations-core) (see **`assets/datadog/integrations-core/ATTRIBUTION.md`**):
+## Optional
 
 ```bash
 bash /root/workshop/scripts/migrate_datadog_integrations_to_serverless.sh
 ```
 
-These use integration metric namespaces (`nginx.*`, `postgresql.*`, …), not the OTLP workshop fleet — expect many panels to need data mapping after migration.
-
 ## Done
 
-**Check** passes when **`build/mig-datadog/dashboards/yaml/`** (or legacy **`yaml/`**) has **10** `*.yaml` files, **`migration_report.json`** under **`build/mig-datadog/dashboards/`** (or root), and **`build/elastic-alerts/`** has **4** `monitor-*-elastic.json` files.
+**Check** passes when **`build/mig-datadog/dashboards/yaml/`** has **10** `*.yaml` files and **`build/elastic-alerts/`** has **4** `monitor-*-elastic.json` files.

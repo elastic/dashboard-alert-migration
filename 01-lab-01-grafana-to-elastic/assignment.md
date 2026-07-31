@@ -123,55 +123,19 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-**Lab goal:** get trusted **metric** views onto Elastic quickly — Grafana JSON here is an adoption accelerator for PromQL-shaped boards you may already own.
-
-When the sandbox is ready, open **Terminal** and run:
+**Lab goal:** adopt **20** PromQL/Grafana-shaped metric dashboards (+ alert drafts) onto Elastic.
 
 ```bash
 bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh
 ```
 
-That single script:
-
-1. Starts (or reuses) the **OTLP** pipeline — Alloy → Elastic **mOTLP** (live **metrics**)
-2. Runs **`grafana-migrate`** on **20** Grafana JSON files in **`assets/grafana/`** (`--native-promql`, uploads to Kibana)
-3. Fetches workshop alerts from **`assets/grafana/alerts/`**
-4. Publishes **Rules** to Kibana via **`publish_grafana_alert_drafts_kibana.py`** (drafts first)
-
-The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — no **`cd`** or **`source`** needed first. Use the **absolute path** above so it works even if your shell left **`/root/workshop`**.
-
 ## Verify
 
-Open the **Elastic Serverless** tab:
+In **Elastic Serverless**:
 
-- **Dashboards** — titles should match the Grafana exports; charts should populate from **`metrics-*`**
-- **AI notes** — each board gets a bottom **Agent Builder** markdown strip (`workshop-ai-rec-grafana`) updated by the **Metrics adoption — AI dashboard notes** workflow (same dbmonitoring pattern)
-- **Metrics adoption — AI notes** — Agent Builder markdown for PromQL/Grafana-shaped metrics adoption (also appended to **Traffic overview** when attach succeeds)
-- **Observability → Rules** — two workshop rules (imported **disabled**; enable in the UI to test)
-
-Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes** (manual run), or in **Terminal**:
-
-```bash
-source ~/.bashrc
-# Sync latest workshop files if Workflows is still empty / scripts missing:
-cd /root/workshop && ./scripts/sync_workshop_from_git.sh
-python3 /root/workshop/scripts/deploy_workshop_workflows.py
-python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --platform grafana --seed-now
-```
-
-Then open **Workflows** and run **Metrics adoption — AI dashboard notes**, or open **Metrics adoption — AI notes** under Dashboards.
-
-## Troubleshooting
-
-| Symptom | Fix |
-| --- | --- |
-| Empty charts | `bash /root/workshop/scripts/check_workshop_otel_pipeline.sh` then `bash /root/workshop/scripts/start_workshop_otel.sh` — wait ~1 min |
-| Still empty after migrate | `WORKSHOP_FORCE_OTEL_RESTART=1 bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh` |
-| Script not found | **Stop** → **Start** the track (wait for challenge to finish loading) |
-| Stale workshop files | `cd /root/workshop && ./scripts/sync_workshop_from_git.sh` |
-
-Optional pre-upload ES\|QL validation: `WORKSHOP_MIG_ES_VALIDATE=1 bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh`
+- **Dashboards** — charts from **`metrics-*`**; scroll to the bottom for **AI notes** (`workshop-ai-rec-grafana`)
+- **Observability → Rules** — two workshop rules (imported **disabled**)
 
 ## Done
 
-**Check** passes when **`build/mig-grafana/dashboards/yaml/`** (or legacy **`yaml/`**) has **20** `*.yaml` files, **`migration_report.json`** under **`build/mig-grafana/dashboards/`** (or **`build/mig-grafana/`**), and alert comparison output under **`build/mig-grafana/alerts/`** (or root) lists the workshop Grafana rules.
+**Check** passes when **`build/mig-grafana/dashboards/yaml/`** has **20** `*.yaml` files and alert comparison output lists the workshop Grafana rules.
