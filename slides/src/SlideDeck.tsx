@@ -56,7 +56,7 @@ const SLIDES: Slide[] = [
   {
     title: "Workshop walkthrough",
     subtitle:
-      "Quick tour of the Instruqt lab — metrics adoption on Elastic Observability Serverless for existing customers.",
+      "Quick tour of the Instruqt lab — metrics adoption on Elastic Observability Serverless.",
     videoSrc: "dashboard-alert-migration.mp4",
   },
   {
