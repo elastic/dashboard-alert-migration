@@ -1,6 +1,7 @@
 {
   "uid": "05-operation-errors",
   "title": "Operation errors by reason",
+  "description": "Operation errors by reason \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Business errors** \u2014 ``operation_errors_total`` by ``reason``."
+        "content": "### What this dashboard shows\nBusiness/application `operation_errors_total` by `reason` and by `service.name`.\n\n### Why it matters for metrics adoption\nShows metrics beyond HTTP counters \u2014 domain error reasons teams already track in PromQL can adopt onto Elastic without rebuilding taxonomy."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

@@ -2,14 +2,16 @@
 slug: lab-01-grafana-to-elastic
 id: 7xffw36spadb
 type: challenge
-title: Lab 1 — Grafana → Elastic Serverless
-teaser: One command migrates 20 Grafana dashboards and workshop alerts into Kibana.
+title: Lab 1 — Adopt PromQL metric views on Elastic
+teaser: One command brings 20 PromQL/Grafana-shaped metric dashboards and alerts onto Kibana.
 notes:
 - type: text
   contents: |
-    ## Telemetry workflow
+    ## Metrics adoption — telemetry workflow
 
-    **Live workshop data** flows like this (same path customers use with OTLP → Elastic):
+    **Audience:** existing Elastic customers. **Purpose:** adopt **metrics** on Observability Serverless.
+
+    **Live workshop metrics** flow like this (same path customers use with OTLP → Elastic):
 
     ```
                       ┌──────────────────────────────┐
@@ -34,7 +36,7 @@ notes:
   contents: |
     ## This lab
 
-    **20** Grafana dashboards + **workshop alerts** → **[observability-migration-platform](https://github.com/elastic/observability-migration-platform)** **`grafana-migrate`** → Kibana. Run **one command** in **Terminal** when the sandbox is ready.
+    Accelerate metrics adoption: **20** Grafana-shaped / PromQL metric dashboards + **workshop alerts** → **[observability-migration-platform](https://github.com/elastic/observability-migration-platform)** **`grafana-migrate`** → Kibana on live **`metrics-*`**. Run **one command** in **Terminal** when the sandbox is ready.
 
     **Next slide:** mini-game while the sandbox finishes provisioning.
 - type: text
@@ -72,6 +74,8 @@ difficulty: ""
 enhanced_loading: null
 ---
 
+**Lab goal:** get trusted **metric** views onto Elastic quickly — Grafana JSON here is an adoption accelerator for PromQL-shaped boards you may already own.
+
 When the sandbox is ready, open **Terminal** and run:
 
 ```bash
@@ -80,10 +84,10 @@ bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh
 
 That single script:
 
-1. Starts (or reuses) the **OTLP** pipeline — Alloy → Elastic **mOTLP**
+1. Starts (or reuses) the **OTLP** pipeline — Alloy → Elastic **mOTLP** (live **metrics**)
 2. Runs **`grafana-migrate`** on **20** Grafana JSON files in **`assets/grafana/`** (`--native-promql`, uploads to Kibana)
 3. Fetches workshop alerts from **`assets/grafana/alerts/`**
-4. Publishes **Rules** to Kibana via **`publish_grafana_alert_drafts_kibana.py`**
+4. Publishes **Rules** to Kibana via **`publish_grafana_alert_drafts_kibana.py`** (drafts first)
 
 The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — no **`cd`** or **`source`** needed first. Use the **absolute path** above so it works even if your shell left **`/root/workshop`**.
 
@@ -91,8 +95,16 @@ The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — 
 
 Open the **Elastic Serverless** tab:
 
-- **Dashboards** — titles should match the Grafana exports
+- **Dashboards** — titles should match the Grafana exports; charts should populate from **`metrics-*`**
+- **What & why** — each board opens with a markdown strip (**What this dashboard shows** / **Why it matters for metrics adoption**) migrated from the Grafana text panel
+- **Metrics adoption — AI notes** — Agent Builder markdown for PromQL/Grafana-shaped metrics adoption (also appended to **Traffic overview** when attach succeeds)
 - **Observability → Rules** — two workshop rules (imported **disabled**; enable in the UI to test)
+
+Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes** (manual run), or:
+
+```bash
+python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --platform grafana --seed-now
+```
 
 ## Troubleshooting
 
@@ -107,4 +119,4 @@ Optional pre-upload ES\|QL validation: `WORKSHOP_MIG_ES_VALIDATE=1 bash /root/wo
 
 ## Done
 
-**Check** passes when **`build/mig-grafana/yaml/`** has **20** `*.yaml` files, **`build/mig-grafana/migration_report.json`** exists, and **`build/mig-grafana/alert_comparison_results.json`** lists the workshop Grafana rules.
+**Check** passes when **`build/mig-grafana/dashboards/yaml/`** (or legacy **`yaml/`**) has **20** `*.yaml` files, **`migration_report.json`** under **`build/mig-grafana/dashboards/`** (or **`build/mig-grafana/`**), and alert comparison output under **`build/mig-grafana/alerts/`** (or root) lists the workshop Grafana rules.

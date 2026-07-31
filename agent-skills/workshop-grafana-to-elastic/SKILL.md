@@ -1,31 +1,32 @@
 ---
 name: workshop-grafana-to-elastic
 description: >
-  Workshop skill for Grafana-customer migrations to Elastic Observability Serverless: bulk-convert Grafana dashboard JSON
-  (Prometheus/PromQL) into Kibana dashboards and rules via grafana-migrate; pair with Elastic Agent Skills for refinement.
+  Workshop skill for metrics adoption on Elastic Observability Serverless (existing customers):
+  bulk-convert Grafana/PromQL metric dashboard JSON into Kibana dashboards and rules via grafana-migrate;
+  pair with Elastic Agent Skills for refinement.
 metadata:
   author: workshop
   version: 0.4.0
 ---
 
-# Grafana → Elastic (workshop)
+# Adopt PromQL metric views → Elastic (workshop)
 
 ## When to use
 
-**Grafana → Elastic Serverless** migration practice: **Grafana** exports in `assets/grafana/` (**20** dashboards)
+**Metrics adoption** practice for existing Elastic customers: **Grafana**/PromQL exports in `assets/grafana/` (**20** dashboards)
 and **`assets/grafana/alerts/`** (unified alert rules for **`--fetch-alerts`**)
 → **[observability-migration-platform](https://github.com/elastic/observability-migration-platform)** **`grafana-migrate`**
 → **`build/mig-grafana/`** + Kibana upload (**`--native-promql`**), then **`tools/publish_grafana_alert_drafts_kibana.py`** for **Rules**.
 
 **Telemetry:** OpenTelemetry SDK → Grafana Alloy → Elastic **mOTLP**. Restart: **`./scripts/start_workshop_otel.sh`**.
 
-## Run migration (Instruqt)
+## Run (Instruqt)
 
 ```bash
 bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh
 ```
 
-Waits for OTLP (or starts **`start_workshop_otel.sh`**), runs **`grafana-migrate`** with **`--upload --ensure-data-views --fetch-alerts`**, then publishes rules. Output: **`build/mig-grafana/yaml/`**, **`migration_report.json`**, **`alert_comparison_results.json`**.
+Waits for OTLP (or starts **`start_workshop_otel.sh`**), runs **`grafana-migrate`** with **`--upload --ensure-data-views --fetch-alerts`**, then publishes rules. Output: **`build/mig-grafana/dashboards/yaml/`** (or **`yaml/`**), **`dashboards/migration_report.json`**, **`alerts/alert_comparison_results.json`** (legacy flat paths still work).
 
 Set **`WORKSHOP_MIG_ES_VALIDATE=1`** to add live ES\|QL validation before upload.
 

@@ -89,10 +89,15 @@ fi
   --ensure-data-views \
   --fetch-monitors
 
-n_yaml="$(find "${OUT}/yaml" -maxdepth 1 -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')"
-echo "    YAML dashboards: ${n_yaml} (under ${OUT}/yaml/)"
+if [ -d "${OUT}/dashboards/yaml" ]; then
+  n_yaml="$(find "${OUT}/dashboards/yaml" -maxdepth 1 -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')"
+  echo "    YAML dashboards: ${n_yaml} (under ${OUT}/dashboards/yaml/)"
+else
+  n_yaml="$(find "${OUT}/yaml" -maxdepth 1 -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" || n_yaml=0
+  echo "    YAML dashboards: ${n_yaml} (under ${OUT}/yaml/)"
+fi
 
-echo "==> [3/5] Converting 4 Datadog monitors → Kibana rule drafts (workshop publisher)..."
+echo "==> [3/6] Converting 4 Datadog monitors → Kibana rule drafts (workshop publisher)..."
 for f in "${ROOT}/assets/datadog/monitor-"*.json; do
   [ -f "$f" ] || continue
   base="$(basename "$f" .json)"
@@ -101,12 +106,23 @@ done
 a="$(find "${ROOT}/build/elastic-alerts" -maxdepth 1 -name 'monitor-*-elastic.json' | wc -l | tr -d ' ')"
 echo "    Alert draft files: ${a}"
 
-echo "==> [4/5] Datadog dashboards already uploaded by datadog-migrate (skip legacy draft publisher)."
+echo "==> [4/6] Datadog dashboards already uploaded by datadog-migrate (skip legacy draft publisher)."
 
-echo "==> [5/5] Publishing Datadog-derived rules to Kibana (disabled by default; no connectors)..."
+echo "==> [5/6] Publishing Datadog-derived rules to Kibana (disabled by default; no connectors)..."
 "${PY}" "${ROOT}/tools/publish_datadog_alert_drafts_kibana.py" --alerts-dir "${ROOT}/build/elastic-alerts"
 
+echo "==> [6/6] Agent Builder metrics-adoption notes (markdown panels + workflow)..."
+if [ "${WORKSHOP_SKIP_AI_NOTES:-0}" = "1" ]; then
+  echo "    Skipping (WORKSHOP_SKIP_AI_NOTES=1)."
+else
+  "${PY}" "${ROOT}/scripts/ensure_ai_recommendation_panels.py" --platform datadog --seed-now \
+    || echo "    WARN: ensure_ai_recommendation_panels.py failed (dashboards still uploaded)." >&2
+  "${PY}" "${ROOT}/scripts/deploy_workshop_workflows.py" metrics-adoption-recommendations.yaml \
+    || echo "    WARN: deploy_workshop_workflows.py failed (AI notes panels may still work via --seed-now)." >&2
+fi
+
 echo "==> Done."
-echo "    Dashboards: Elastic Serverless → search for migrated Datadog titles; artifacts under ${OUT}/"
-echo "    Monitor IR summary: ${OUT}/monitor_migration_results.json (datadog-migrate) + published rules from build/elastic-alerts/"
+echo "    Dashboards: Elastic Serverless → search for migrated Datadog titles + **Metrics adoption — AI notes**"
+echo "    Monitor IR summary: ${OUT}/alerts/monitor_migration_results.json (or monitor_migration_results.json) + published rules from build/elastic-alerts/"
 echo "    Rules: Observability → Rules — workshop imports are created **disabled**; enable/edit queries in the UI."
+echo "    AI notes: refresh **Metrics adoption — AI notes** or **Service overview**; Workflows schedule every 10m."

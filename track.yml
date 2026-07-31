@@ -1,10 +1,13 @@
 slug: elastic-serverless-migration-lab
 id: hs7ogfqktp5m
-title: Grafana & Datadog → Elastic Serverless (migration workshop)
-teaser: Grafana & Datadog → Elastic Serverless—dashboards, alerts, and OTLP in guided
-  labs.
+title: Metrics adoption on Elastic Observability (existing customers)
+teaser: Adopt metrics on Elastic Observability Serverless—OTLP ingest, dashboards,
+  and alerts (including PromQL / Datadog metric assets).
 description: |
-  obs-migrate labs (grafana-migrate, datadog-migrate), Alloy→OTLP, Kibana on :8080. See the repo README for full setup; engine is upstream elastic/observability-migration-platform.
+  Metrics adoption workshop for existing Elastic customers. Live OTLP → mOTLP,
+  Kibana on :8080. Labs accelerate adoption with grafana-migrate / datadog-migrate
+  (metric dashboards & monitors → Kibana). Engine: elastic/observability-migration-platform.
+  Invite copy: docs/invite.md.
 icon: https://cdn.instruqt.com/assets/templates/kubernetes.png
 tags:
 - obs-migrate
@@ -14,6 +17,7 @@ tags:
 - observability-migration-platform
 - opentelemetry
 - serverless
+- metrics-adoption
 - migration
 - observability
 - co.elastic.workshops

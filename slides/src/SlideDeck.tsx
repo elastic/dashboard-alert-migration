@@ -37,18 +37,18 @@ const UPSTREAM_REPOS: {
   note?: string;
 }[] = [
   {
-    label: "elastic/mig-to-kbn",
-    repoUrl: "https://github.com/elastic/mig-to-kbn",
-    issuesUrl: "https://github.com/elastic/mig-to-kbn/issues",
-    pullsUrl: "https://github.com/elastic/mig-to-kbn/pulls",
-    note: "Grafana & Datadog → Kibana migration (`grafana-migrate`, `datadog-migrate`).",
+    label: "elastic/observability-migration-platform",
+    repoUrl: "https://github.com/elastic/observability-migration-platform",
+    issuesUrl: "https://github.com/elastic/observability-migration-platform/issues",
+    pullsUrl: "https://github.com/elastic/observability-migration-platform/pulls",
+    note: "grafana-migrate / datadog-migrate — accelerate metrics dashboards & monitors onto Kibana.",
   },
   {
     label: "strawgate/kb-yaml-to-lens",
     repoUrl: "https://github.com/strawgate/kb-yaml-to-lens",
     issuesUrl: "https://github.com/strawgate/kb-yaml-to-lens/issues",
     pullsUrl: "https://github.com/strawgate/kb-yaml-to-lens/pulls",
-    note: "kb-dashboard-cli — YAML dashboards → Kibana NDJSON (used by mig-to-kbn compile).",
+    note: "kb-dashboard-cli — YAML dashboards → Kibana NDJSON (used by compile/upload).",
   },
 ];
 
@@ -56,34 +56,34 @@ const SLIDES: Slide[] = [
   {
     title: "Workshop walkthrough",
     subtitle:
-      "Quick tour of the Instruqt lab — Grafana & Datadog dashboards and alerts toward Elastic Observability Serverless.",
+      "Quick tour of the Instruqt lab — metrics adoption on Elastic Observability Serverless for existing customers.",
     videoSrc: "dashboard-alert-migration.mp4",
   },
   {
     title: "Try the guided experience",
     subtitle:
-      "Walk through a realistic Grafana and Datadog → Elastic Observability Serverless migration in a browser sandbox — no install required.",
+      "Adopt metrics in a browser sandbox: live OTLP → Kibana dashboards and alert drafts — no install required.",
     workshopUrl: INSTRUQT_INVITE,
     workshopLinkLabel: "Launch Elastic sandbox (Instruqt)",
   },
   {
-    title: "Why teams re-home Grafana & Datadog on Elastic",
+    title: "Why existing Elastic customers deepen metrics",
     subtitle:
-      "Customers want fewer silos between metrics stores, log pipelines, and APM — without re-authoring years of dashboards from a blank canvas.",
+      "Logs and traces are often already on Elastic — metrics still live in parallel stacks. Adoption means one operations plane.",
     bullets: [
-      "One managed stack for logs, metrics, and traces (Elastic Observability) instead of bolting together separate vendors and query languages.",
-      "OpenTelemetry-native ingest fits how you already ship telemetry — including dual-publish or gradual cutover from existing collectors.",
-      "ES|QL and Lens give analysts one executable language across signals, with Kibana as a single operations and executive surface.",
-      "APIs and automation matter at enterprise scale: dashboards and alerting should be versionable, repeatable, and CI-friendly — not only UI clicks.",
+      "One managed stack for logs, metrics, and traces so SREs stop pivoting across siloed query languages and UIs.",
+      "OpenTelemetry-native ingest matches how platform teams already ship telemetry — including dual-publish while you expand coverage.",
+      "ES|QL and Lens give analysts one executable language across signals, with Kibana as the shared operations surface.",
+      "APIs and automation matter at enterprise scale: metric dashboards and alerting should be versionable and reviewable — not only UI clicks.",
     ],
   },
   {
-    title: "What this story demonstrates",
+    title: "What this workshop demonstrates",
     subtitle:
-      "A credible slice of a real migration: representative Grafana and Datadog assets land as reviewable Kibana content on Serverless.",
+      "A credible metrics-adoption slice: OTLP ingest, reviewable Kibana content, and optional reuse of PromQL / Datadog metric assets.",
     bullets: [
-      "A multi-service OTLP footprint — the same pattern customers use when standardizing on Elastic managed ingest.",
-      "Dozens of Grafana-style and Datadog-style dashboards exercised end-to-end so you can stress-test classification, ES|QL, and stakeholder review.",
+      "A multi-service OTLP footprint — the same pattern customers use when standardizing on Elastic managed ingest for metrics.",
+      "Dozens of PromQL- and Datadog-shaped metric dashboards exercised end-to-end so you can stress-test classification, ES|QL, and owner review.",
       "Alert artifacts travel the same automation spine as dashboards — drafts first, then human approval before production enforcement.",
       "Everything you see is reproducible from source exports + automation — the same ingredients you would pipeline internally.",
     ],
@@ -91,7 +91,7 @@ const SLIDES: Slide[] = [
   {
     title: "Elastic by the numbers",
     subtitle:
-      "Directional benefits we use in customer business cases — your timelines depend on panel complexity, security reviews, and cutover windows.",
+      "Directional benefits for metrics adoption business cases — timelines depend on panel complexity, security reviews, and cutover windows.",
     statCards: [
       {
         figure: "4–10×",
@@ -101,15 +101,15 @@ const SLIDES: Slide[] = [
       },
       {
         figure: "30",
-        title: "Dashboards in this journey",
+        title: "Metric dashboards in this journey",
         caption:
-          "Twenty Grafana-style and ten Datadog-style boards — enough volume to prove classification, not just a happy-path demo.",
+          "Twenty PromQL/Grafana-shaped and ten Datadog-shaped boards — enough volume to prove classification, not just a happy-path demo.",
       },
       {
         figure: "2",
         title: "Controlled phases",
         caption:
-          "Phase 1: preserve source intent in structured drafts (PromQL, Datadog queries). Phase 2: publish executable ES|QL in Lens via API.",
+          "Phase 1: preserve source metric intent in structured drafts. Phase 2: publish executable ES|QL in Lens via API.",
       },
       {
         figure: "Hours",
@@ -121,31 +121,31 @@ const SLIDES: Slide[] = [
         figure: "1",
         title: "Unified ingest plane",
         caption:
-          "One OTLP-oriented path for logs, metrics, and traces — fewer parallel integrations while you sunset legacy backends.",
+          "One OTLP-oriented path for logs, metrics, and traces — fewer parallel integrations while you expand metrics coverage.",
       },
       {
         figure: "4",
         title: "Sample alert definitions",
         caption:
-          "Representative Datadog monitor-style JSON becomes Kibana rule drafts — the same governance model as migrated dashboards.",
+          "Representative monitor-style JSON becomes Kibana rule drafts — the same governance model as adopted dashboards.",
       },
     ],
   },
   {
     title: "Your telemetry, Elastic’s managed pipeline",
     subtitle:
-      "Elastic Observability Serverless speaks OTLP fluently — the open standard teams already adopt alongside Grafana and Datadog agents.",
+      "Elastic Observability Serverless speaks OTLP fluently — the open standard for metrics (and logs/traces) adoption.",
     bullets: [
       "Collectors and agents forward gRPC/HTTP OTLP; Elastic managed ingest terminates with sensible defaults for production cardinality.",
-      "Prometheus-compatible scrape still fits sidecars and service meshes — Elastic becomes the sink, not another siloed Prometheus clone.",
+      "Prometheus-compatible scrape still fits sidecars and service meshes — Elastic becomes the metrics sink, not another siloed store.",
       "Scoped API keys and Org security align with how enterprises govern cross-team observability projects.",
       "In the guided sandbox, live telemetry confirms Lens and Discover against real series — not screenshots.",
     ],
   },
   {
-    title: "A deliberate two-stage migration",
+    title: "A deliberate two-stage adoption path",
     subtitle:
-      "Reduce risk: separate “capture legacy intent” from “publish executable analytics” so auditors and SREs stay aligned.",
+      "Reduce risk: separate “capture metric intent” from “publish executable analytics” so auditors and SREs stay aligned.",
     bullets: [
       "Stage 1 — Ingest source-of-truth exports (Grafana JSON, Datadog dashboards/monitors) and emit Elastic-oriented drafts with traceable metadata.",
       "Stage 2 — Publish Lens panels and rules through Kibana APIs, with ES|QL grounded in your actual indices and naming conventions.",
@@ -154,47 +154,47 @@ const SLIDES: Slide[] = [
     ],
   },
   {
-    title: "From familiar signals to Lens charts",
+    title: "From familiar metric signals to Lens charts",
     subtitle:
-      "Automation classifies the themes SREs already watch — CPU, latency, HTTP health, Kubernetes signals — then maps them to durable ES|QL.",
+      "Automation classifies themes SREs already watch — CPU, latency, HTTP health, Kubernetes signals — then maps them to durable ES|QL.",
     bullets: [
       "Pattern recognition groups panels so HTTP saturation, golden signals, and infrastructure proxies land in the right Lens templates.",
       "Time bucketing follows your duration policy so charts honor SLO windows instead of arbitrary fixed buckets.",
-      "Breakdowns favor dimensions you already standardized — for example service.name — so migrated boards stay comparable week over week.",
+      "Breakdowns favor dimensions you already standardized — for example service.name — so boards stay comparable week over week.",
       "Edge cases become explicit in documentation panels: humans refine ES|QL where automation should not guess.",
     ],
   },
   {
-    title: "If you are a Grafana customer today",
+    title: "If you already keep PromQL / Grafana metric boards",
     subtitle:
-      "Classic JSON exports, Grafana Cloud app exports, and Elasticsearch-backed app panels each have a path — preserve dashboard IP as you move runtimes.",
+      "Treat those exports as adoption accelerators — preserve metric dashboard IP while Elastic becomes the runtime.",
     bullets: [
-      "Bulk dashboard JSON: PromQL stays documented while Lens runs ES|QL against your Elastic data plane — no secret translation black box.",
+      "Bulk dashboard JSON: PromQL stays documented while Lens runs ES|QL against your Elastic metrics plane.",
       "Kubernetes-hosted Grafana with Elasticsearch datasources can pivot through the same publishing APIs your platform team already automates.",
       "Operating model: platform SREs run conversion and publish jobs; application owners validate visuals against golden datasets.",
-      "Hands-on sandbox mirrors scripted paths your services team can lift into Jenkins, GitHub Actions, or internal runbooks.",
+      "Hands-on sandbox mirrors scripted paths your services team can lift into CI or internal runbooks.",
     ],
   },
   {
-    title: "If you are a Datadog customer today",
+    title: "If you already keep Datadog metric boards & monitors",
     subtitle:
-      "Dashboard JSON and monitor definitions are assets — ship the same discipline you use for IaC so Elastic inherits governance, not chaos.",
+      "Dashboard JSON and monitor definitions are assets — bring them into Elastic with the same governance you use for IaC.",
     bullets: [
       "Timeseries, top lists, and query widgets become Lens panels with Datadog q captured for audit — ES|QL is what runs at query time.",
       "Monitors surface as Kibana alert drafts so SecOps and SREs approve thresholds, connectors, and runbooks before go-live.",
-      "Tag-heavy APM and host maps align with OTLP resource attributes already landing in Elastic — fewer semantic rewrites mid-migration.",
+      "Tag-heavy APM and host maps align with OTLP resource attributes already landing in Elastic — fewer semantic rewrites mid-adoption.",
       "Dense dashboards prove the classification engine: many widgets per board is closer to customer reality than toy samples.",
     ],
   },
   {
-    title: "Your next steps with Elastic",
+    title: "Your next 30 days of metrics adoption",
     subtitle:
-      "Treat the sandbox as a rehearsal: the same checklist scales to your first production wave once connectivity and roles are ready.",
+      "Treat the sandbox as a rehearsal: the same checklist scales once connectivity and roles are ready.",
     bullets: [
-      "Validate ingest: Confirm logs, metrics, and traces you care about appear in Elastic with the tags and services your teams expect.",
-      "Review migrated drafts with dashboard owners: titles, ES|QL, and annotations should pass a human gate before executives rely on them.",
-      "Exercise alerting: Wire notification destinations you already trust, run failure drills, and only then broaden enforcement.",
-      "Industrialize: Check automation into source control, parameterize environments, and schedule the next portfolio slice — volume wins when repeatability wins.",
+      "Validate ingest: Confirm the metrics you care about appear in Elastic with the tags and services your teams expect.",
+      "Land three canonical metric dashboards and review drafts with owners before executives rely on them.",
+      "Exercise alerting: Wire notification destinations you already trust, run failure drills, then broaden enforcement.",
+      "Industrialize: Check automation into source control, parameterize environments, and schedule the next portfolio slice.",
     ],
   },
 ];
@@ -230,7 +230,7 @@ export function SlideDeck() {
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="flex items-center justify-between border-b border-white/10 bg-black/20 px-4 py-3 backdrop-blur-sm">
           <span className="font-mono text-xs text-white/70">
-            Grafana & Datadog → Elastic Observability
+            Metrics adoption · Elastic Observability
           </span>
           <span className="font-mono text-xs text-white/50">
             {i + 1} / {n}
@@ -373,8 +373,8 @@ export function SlideDeck() {
             </div>
             <div className="text-center font-mono text-[10px] leading-relaxed text-zinc-500 sm:max-w-md sm:text-left sm:text-xs">
               <p className="text-zinc-400">
-                Upstream feedback — <span className="text-zinc-300">Subham</span> and team ship the migration
-                stack in{" "}
+                Upstream feedback — <span className="text-zinc-300">Subham</span> and team ship the metrics
+                adoption / migration stack in{" "}
                 <a
                   href={UPSTREAM_REPOS[0].repoUrl}
                   target="_blank"

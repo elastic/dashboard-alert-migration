@@ -1,6 +1,7 @@
 {
   "uid": "17-queue-depth",
   "title": "Queue depth stand-in",
+  "description": "Queue depth stand-in \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Queues** \u2014 request **rate** by route and service (no ``workqueue_depth`` in workshop OTLP)."
+        "content": "### What this dashboard shows\nRequest **rate** by route and service as a queue/backlog stand-in.\n\n### Why it matters for metrics adoption\nMany shops adopt metrics with backlog proxies before true queue gauges exist on Elastic \u2014 this board models that incremental path.\n\n### Notes\nNo `workqueue_depth` in workshop OTLP."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

@@ -1,6 +1,7 @@
 {
   "uid": "06-top-entities",
   "title": "Top services by traffic",
+  "description": "Top services by traffic \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Service ranking** \u2014 Grafana ``topk`` is omitted so migration stays on the supported PromQL subset; use Lens Top Values or ``LIMIT`` in Kibana for strict top-N."
+        "content": "### What this dashboard shows\nService ranking via rate by `service.name` (and method). Grafana `topk` is omitted so migration stays on the supported PromQL subset.\n\n### Why it matters for metrics adoption\nPlatform teams adopt metrics when they can answer \u201cwho is hottest right now?\u201d on Elastic; Lens Top Values / `LIMIT` cover strict top-N after import."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

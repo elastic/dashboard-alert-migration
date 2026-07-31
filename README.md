@@ -1,12 +1,19 @@
-# elastic-serverless-migration-lab (Instruqt track)
+# Metrics adoption on Elastic Observability (Instruqt track)
 
-**GitHub:** [github.com/poulsbopete/dashboard-alert-migration](https://github.com/poulsbopete/dashboard-alert-migration)
+**GitHub:** [github.com/elastic/dashboard-alert-migration](https://github.com/elastic/dashboard-alert-migration)
 
 **Instruqt (Elastic team):** [play.instruqt.com/manage/elastic/tracks/elastic-serverless-migration-lab](https://play.instruqt.com/manage/elastic/tracks/elastic-serverless-migration-lab)
 
-**Goal:** Train for **customer migrations from Grafana and Datadog to Elastic Observability Serverless**—dashboards, monitors → Kibana rules, **PromQL / Datadog metric-query** handoffs, and **OTLP** telemetry landing in Elastic **managed OTLP (mOTLP)** so migrated views validate on **live** Serverless data.
+**Purpose:** **Metrics adoption** on Elastic Observability Serverless.  
+**Audience:** **Existing Elastic customers** deepening metrics coverage (often alongside logs/traces already on Elastic).
+
+**Goal:** Train teams to land **metrics** in Elastic via **OTLP → managed OTLP (mOTLP)**, publish reviewable **Kibana dashboards and alert drafts** on live **`metrics-*`** data, and **accelerate adoption** by bringing forward PromQL / Datadog-shaped metric assets they may already own (via **`grafana-migrate`** / **`datadog-migrate`**).
+
+**Invite & design:** [`docs/invite.md`](docs/invite.md) · [`docs/workshop-design.md`](docs/workshop-design.md)
 
 **Primary migration engine:** **[elastic/observability-migration-platform](https://github.com/elastic/observability-migration-platform)** (`obs-migrate`, `grafana-migrate`, `datadog-migrate`; formerly **elastic/mig-to-kbn**). Upstream docs: [architecture](https://github.com/elastic/observability-migration-platform/blob/main/docs/architecture.md), [Grafana sources](https://github.com/elastic/observability-migration-platform/blob/main/docs/sources/grafana.md), [Datadog sources](https://github.com/elastic/observability-migration-platform/blob/main/docs/sources/datadog.md).
+
+**Agent Builder AI notes (dbmonitoring pattern):** After each lab migrate, the scripts call **`scripts/ensure_ai_recommendation_panels.py --seed-now`** and deploy **`workflows/metrics-adoption-recommendations.yaml`**. That workflow uses **`POST /api/agent_builder/converse`**, indexes into **`metrics-adoption-recommendations`**, and refreshes library Markdown **`workshop-ai-rec-*`** on the **Metrics adoption — AI notes** dashboard (and optionally **Traffic overview** / **Service overview**). Skip with **`WORKSHOP_SKIP_AI_NOTES=1`**.
 
 This repo **vendors** an **unmodified copy** of upstream under **`mig-to-kbn/`** (directory name kept for scripts). The pinned commit is recorded in **`mig-to-kbn-upstream.lock`**. **Refresh:** **`./scripts/update_mig_to_kbn.sh`** · **Verify:** **`./scripts/verify_mig_to_kbn_upstream.sh`**. On **Instruqt**, bootstrap installs from the vendored tree when present; otherwise it clones **`https://github.com/elastic/observability-migration-platform.git`** (override with **`WORKSHOP_MIG_TO_KBN_GIT_URL`** / **`WORKSHOP_MIG_TO_KBN_GIT_REF`**). **`scripts/install_workshop_mig_to_kbn.sh`** uses **`uv`** + **Python 3.12** at **`/opt/mig-to-kbn-venv`**; compile/upload uses **`uvx kb-dashboard-cli`**.
 
@@ -23,10 +30,10 @@ Engine fixes → **[Issues](https://github.com/elastic/observability-migration-p
 
 ## Two labs (Path A — primary)
 
-| Lab | Assets | Migrate script | Target indices (typical) |
-| --- | --- | --- | --- |
-| **Lab 1 — Grafana** | **20** dashboard JSON + **2** alert rules (`assets/grafana/alerts/`) | **`bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`**, **`traces-*`**; **`grafana-migrate --native-promql`** |
-| **Lab 2 — Datadog** | **10** workshop dashboards + **4** monitors | **`bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`** via upstream **`datadog-migrate --field-profile otel`** (built-in default) |
+| Lab | Adoption focus | Assets | Script | Target indices (typical) |
+| --- | --- | --- | --- | --- |
+| **Lab 1 — PromQL metric views** | Adopt Grafana-shaped metric dashboards onto Elastic | **20** dashboard JSON + **2** alert rules (`assets/grafana/alerts/`); each board has a **What & why** text panel | **`bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`**, **`traces-*`**; **`grafana-migrate --native-promql`** |
+| **Lab 2 — Datadog metric views** | Adopt Datadog-shaped metric dashboards + monitors | **10** workshop dashboards + **4** monitors; each board has a **What & why** note widget | **`bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`** via upstream **`datadog-migrate --field-profile otel`** (built-in default) |
 
 **Optional Lab 2 extension:** **`scripts/migrate_datadog_integrations_to_serverless.sh`** — **8** real dashboards from [DataDog/integrations-core](https://github.com/DataDog/integrations-core) under **`assets/datadog/integrations-core/`** (refresh with **`scripts/update_datadog_integrations_dashboards.sh`**).
 
@@ -68,6 +75,8 @@ Both lab scripts call upstream **`grafana-migrate`** / **`datadog-migrate`** con
 1. Start or reuse OTLP (**`start_workshop_otel.sh`**, ~45s wait).
 2. Run upstream migrate CLI with **`--upload`** (flags match upstream docs — no vendored forks).
 3. Publish workshop monitor/alert JSON via legacy **`tools/publish_*_alert_drafts_kibana.py`** where the lab still uses them.
+
+**Output layout (current mig-to-kbn):** Grafana/Datadog artifacts live under **`build/mig-*/dashboards/yaml/`**, reports in **`dashboards/`**, alerts in **`alerts/`**. Lab checks and migrate scripts accept the legacy flat **`yaml/`** paths too.
 
 **ES|QL pre-upload validation** is **off** by default (scripts pass **`--es-url ""`** so **`ES_URL` in `~/.bashrc`** does not auto-enable validation). Set **`WORKSHOP_MIG_ES_VALIDATE=1`** for live **`/_query`** checks.
 
@@ -115,6 +124,7 @@ Key env vars: **`WORKSHOP_ESQL_FROM`**, **`WORKSHOP_ESQL_BUCKET_DURATION`** (def
 | `02-lab-02-datadog-dashboards-alerts-to-elastic/` | Lab 2 challenge (**10** dashboards + **4** monitors) |
 | `mig-to-kbn/` | Unmodified vendored **observability-migration-platform** snapshot |
 | `mig-to-kbn-upstream.lock` | Pinned upstream **`commit=`** (written by **`update_mig_to_kbn.sh`**) |
+| `scripts/patches/` | Pending-upstream patches re-applied after each **`update_mig_to_kbn.sh`** (see **`scripts/patches/README.md`**) |
 | `assets/grafana/` | **20** generated Grafana JSON; **`alerts/`** for **`--fetch-alerts`** |
 | `assets/datadog/dashboards/` | **10** Datadog-style dashboards |
 | `assets/datadog/integrations-core/` | **8** integrations-core dashboards (BSD) |

@@ -23,9 +23,17 @@ fi
 UPSTREAM_COMMIT="$(git -C "${TDIR}/upstream" rev-parse HEAD)"
 echo "    Upstream HEAD: ${UPSTREAM_COMMIT} — $(git -C "${TDIR}/upstream" log -1 --oneline)"
 
+COMPARE="${TDIR}/upstream"
+if [ -x "${ROOT}/scripts/apply_workshop_mig_patches.sh" ] && compgen -G "${ROOT}/scripts/patches/*.patch" >/dev/null; then
+  cp -a "${TDIR}/upstream" "${TDIR}/upstream-patched"
+  MIG_TO_KBN_DIR="${TDIR}/upstream-patched" bash "${ROOT}/scripts/apply_workshop_mig_patches.sh"
+  COMPARE="${TDIR}/upstream-patched"
+  echo "    Comparing against upstream + workshop patches (scripts/patches/*.patch)"
+fi
+
 DIFF_OUT="$(mktemp)"
-diff -rq "${TDIR}/upstream" "${MIG}" >"${DIFF_OUT}" 2>&1 || true
-DIFF_LINES="$(grep -v 'Only in .*/upstream: \.git$' "${DIFF_OUT}" || true)"
+diff -rq "${COMPARE}" "${MIG}" >"${DIFF_OUT}" 2>&1 || true
+DIFF_LINES="$(grep -v 'Only in .*/upstream-patched: \.git$' "${DIFF_OUT}" | grep -v 'Only in .*/upstream: \.git$' || true)"
 if [ -z "${DIFF_LINES}" ]; then
   echo "OK: mig-to-kbn/ matches upstream ${REF} (${UPSTREAM_COMMIT:0:12})."
   if [ -f "${ROOT}/mig-to-kbn-upstream.lock" ]; then

@@ -1,6 +1,7 @@
 {
   "uid": "04-error-rate",
   "title": "Error rate",
+  "description": "Error rate \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Errors** \u2014 5xx share of traffic plus raw server-error rate for context."
+        "content": "### What this dashboard shows\n5xx share of HTTP traffic and raw server-error rate, with an instant status breakdown.\n\n### Why it matters for metrics adoption\nError rate is the fastest way to validate that migrated PromQL error panels land on live Elastic metrics and support alert drafts."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

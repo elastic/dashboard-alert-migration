@@ -1,7 +1,26 @@
 {
   "title": "Error budget view",
-  "description": "Synthetic Datadog-style export for migration workshop (multi-widget)",
+  "description": "Error budget view \u2014 metrics adoption workshop board (What & why note at top).",
   "widgets": [
+    {
+      "definition": {
+        "type": "note",
+        "content": "### What this dashboard shows\nError and hit volume, breakdowns by service/resource/status, burn-style hit series, and latency alongside errors.\n\n### Why it matters for metrics adoption\nError-budget thinking is a common metrics-adoption goal; this board shows how Datadog-shaped monitors and charts can drive the same conversation on Elastic.",
+        "background_color": "white",
+        "font_size": "14",
+        "text_align": "left",
+        "show_tick": false,
+        "tick_pos": "50%",
+        "tick_edge": "left",
+        "vertical_align": "top"
+      },
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 12,
+        "height": 3
+      }
+    },
     {
       "definition": {
         "type": "timeseries",
@@ -15,7 +34,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 0,
+        "y": 3,
         "width": 6,
         "height": 4
       }
@@ -33,7 +52,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 0,
+        "y": 3,
         "width": 6,
         "height": 4
       }
@@ -51,7 +70,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 4,
+        "y": 7,
         "width": 6,
         "height": 4
       }
@@ -69,7 +88,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 4,
+        "y": 7,
         "width": 6,
         "height": 4
       }
@@ -87,7 +106,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 8,
+        "y": 11,
         "width": 6,
         "height": 4
       }
@@ -105,7 +124,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 8,
+        "y": 11,
         "width": 6,
         "height": 4
       }
@@ -123,7 +142,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 12,
+        "y": 15,
         "width": 6,
         "height": 4
       }
@@ -141,7 +160,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 12,
+        "y": 15,
         "width": 6,
         "height": 4
       }
@@ -159,7 +178,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 16,
+        "y": 19,
         "width": 6,
         "height": 4
       }
@@ -177,7 +196,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 16,
+        "y": 19,
         "width": 6,
         "height": 4
       }
@@ -195,7 +214,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 20,
+        "y": 23,
         "width": 6,
         "height": 4
       }
@@ -213,7 +232,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 20,
+        "y": 23,
         "width": 6,
         "height": 4
       }

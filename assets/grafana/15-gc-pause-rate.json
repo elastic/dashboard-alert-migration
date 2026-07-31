@@ -1,6 +1,7 @@
 {
   "uid": "15-gc-pause-rate",
   "title": "GC pause indicator",
+  "description": "GC pause indicator \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Why not real Go GC metrics here:** `go_gc_duration_seconds_*` histogram parts are often stored in Elasticsearch as **double** gauges, while ES|QL **RATE** only accepts **counter** fields \u2014 migrated panels then fail at query time. This board keeps the **GC / runtime pressure** story but uses the workshop fleet\u2019s **counter** metrics (`http_requests_total`, `operation_errors_total`) so native PromQL \u2192 ES|QL works on Serverless."
+        "content": "### What this dashboard shows\nRuntime-pressure story using fleet **counter** metrics (`http_requests_total`, `operation_errors_total`) by host and service.\n\n### Why it matters for metrics adoption\nIllustrates honest metrics adoption: prefer queries that work on Elastic field types over importing PromQL that cannot run (e.g. RATE on gauge GC histograms).\n\n### Notes\n`go_gc_duration_seconds_*` often lands as double gauges; ES|QL RATE needs counters. This board keeps the GC/runtime narrative with counter-backed proxies."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

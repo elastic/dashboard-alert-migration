@@ -1,6 +1,7 @@
 {
   "uid": "03-latency-p95",
   "title": "Latency p95",
+  "description": "Latency p95 \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Latency** \u2014 mean duration by **service.name** (histogram sum/count). Serverless has no **histogram_quantile** in ES|QL; second chart shows observation rate for contrast."
+        "content": "### What this dashboard shows\nMean request duration by `service.name` (histogram sum/count) and observation rate for contrast. Serverless ES|QL has no `histogram_quantile`, so this is the stable p95-style proxy.\n\n### Why it matters for metrics adoption\nLatency is a core SLO input; adopting metrics on Elastic means trusting duration charts against the same OTLP series apps already emit.\n\n### Notes\nTitle keeps a familiar p95 framing; values are mean(sum/count), not true histogram quantiles."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

@@ -1,6 +1,7 @@
 {
   "uid": "18-cache-hit-ratio",
   "title": "Success share (2xx)",
+  "description": "Success share (2xx) \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Availability proxy** \u2014 2xx share of traffic (no ``cache_*`` counters in workshop OTLP)."
+        "content": "### What this dashboard shows\n2xx share of traffic and absolute 2xx vs non-2xx rates.\n\n### Why it matters for metrics adoption\nSuccess-ratio boards are a lightweight availability metric teams can adopt early while richer cache/hit metrics are still being instrumented.\n\n### Notes\nNo `cache_*` counters in workshop OTLP; 2xx share is the intentional proxy."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

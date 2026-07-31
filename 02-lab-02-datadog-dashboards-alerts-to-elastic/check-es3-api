@@ -2,19 +2,29 @@
 set -euo pipefail
 cd /root/workshop
 
-mig_yaml="$(find build/mig-datadog/yaml -maxdepth 1 -type f -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')"
-mig_report="build/mig-datadog/migration_report.json"
-ac="$(find build/elastic-alerts -maxdepth 1 -type f -name 'monitor-*-elastic.json' 2>/dev/null | wc -l | tr -d ' ')"
+# Support old layout (yaml/) and new (dashboards/yaml/) from newer mig-to-kbn.
+mig_yaml_old="$(find build/mig-datadog/yaml -maxdepth 1 -type f -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" || mig_yaml_old=0
+mig_yaml_new="$(find build/mig-datadog/dashboards/yaml -maxdepth 1 -type f -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" || mig_yaml_new=0
+if [ "${mig_yaml_new:-0}" -gt "${mig_yaml_old:-0}" ]; then
+  mig_yaml="${mig_yaml_new}"
+  mig_report="build/mig-datadog/dashboards/migration_report.json"
+else
+  mig_yaml="${mig_yaml_old}"
+  mig_report="build/mig-datadog/migration_report.json"
+  [ ! -f "$mig_report" ] && [ -f "build/mig-datadog/dashboards/migration_report.json" ] && mig_report="build/mig-datadog/dashboards/migration_report.json"
+fi
+
+ac="$(find build/elastic-alerts -maxdepth 1 -type f -name 'monitor-*-elastic.json' 2>/dev/null | wc -l | tr -d ' ')" || ac=0
 
 if [ -f "$mig_report" ] && [ "${mig_yaml:-0}" -ge 10 ] && [ "${ac:-0}" -ge 4 ]; then
   echo "Lab 2 checks passed (mig-to-kbn: ${mig_yaml} YAML, migration_report.json, ${ac} alert drafts)."
   exit 0
 fi
 
-legacy="$(find build/elastic-datadog-dashboards -maxdepth 1 -type f -name '*-elastic-draft.json' 2>/dev/null | wc -l | tr -d ' ')"
+legacy="$(find build/elastic-datadog-dashboards -maxdepth 1 -type f -name '*-elastic-draft.json' 2>/dev/null | wc -l | tr -d ' ')" || legacy=0
 if [ "${legacy:-0}" -ge 10 ] && [ "${ac:-0}" -ge 4 ]; then
   echo "Lab 2 checks passed (legacy drafts: ${legacy}, alert drafts: ${ac})."
   exit 0
 fi
 
-fail-message "Expected mig-to-kbn: 10+ *.yaml in build/mig-datadog/yaml/, build/mig-datadog/migration_report.json, and 4 monitor-*-elastic.json in build/elastic-alerts/ (yaml: ${mig_yaml:-0}, report: $([ -f "$mig_report" ] && echo yes || echo no), alerts: ${ac:-0}). Or legacy: 10 *-elastic-draft.json in build/elastic-datadog-dashboards. Run: bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh"
+fail-message "Expected mig-to-kbn: 10+ *.yaml in build/mig-datadog/yaml/ (or dashboards/yaml/), migration_report.json, and 4 monitor-*-elastic.json in build/elastic-alerts/ (yaml: ${mig_yaml:-0}, report: $([ -f "$mig_report" ] && echo yes || echo no), alerts: ${ac:-0}). Or legacy: 10 *-elastic-draft.json in build/elastic-datadog-dashboards. Run: bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh"

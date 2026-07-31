@@ -1,6 +1,7 @@
 {
   "uid": "14-memory-working-set",
   "title": "Workload mix",
+  "description": "Workload mix \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Workload** \u2014 HTTP traffic plus operation errors (no ``process_resident_memory_bytes`` in workshop OTLP)."
+        "content": "### What this dashboard shows\nHTTP traffic plus operation errors (volume and by service/reason) as a workload mix view.\n\n### Why it matters for metrics adoption\nWhen memory metrics are not yet on Elastic, this board still teaches mixed-signal dashboards while teams expand infra metric coverage.\n\n### Notes\nNo `process_resident_memory_bytes` in workshop OTLP."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -86,7 +87,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

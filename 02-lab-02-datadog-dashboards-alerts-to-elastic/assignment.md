@@ -2,14 +2,14 @@
 slug: lab-02-datadog-dashboards-alerts-to-elastic
 id: berxl591tjk4
 type: challenge
-title: Lab 2 — Datadog dashboards & monitors → Elastic
-teaser: One command migrates 10 Datadog-style dashboards and four monitors into Kibana.
+title: Lab 2 — Adopt Datadog metric views & monitors
+teaser: One command brings 10 Datadog-shaped metric dashboards and four monitors onto Kibana.
 notes:
 - type: text
   contents: |
-    ## Telemetry workflow
+    ## Metrics adoption — telemetry workflow
 
-    **Live workshop data** flows like this (same as Lab 1 — Alloy → Elastic **mOTLP**):
+    **Audience:** existing Elastic customers. **Purpose:** adopt **metrics** (same OTLP path as Lab 1 — Alloy → Elastic **mOTLP**):
 
     ```
                       ┌──────────────────────────────┐
@@ -32,7 +32,7 @@ notes:
   contents: |
     ## This lab
 
-    **10** Datadog dashboards (**`datadog-migrate`**) + **4** monitors (workshop rule publisher) → Kibana. Run **one command** in **Terminal** when the sandbox is ready.
+    Accelerate metrics adoption: **10** Datadog-shaped metric dashboards (**`datadog-migrate`**) + **4** monitors → Kibana dashboards and alert **drafts**. Run **one command** in **Terminal** when the sandbox is ready.
 
     **Live OTLP:** **`./scripts/send_datadog_otel.sh`** (or **`tools/datadog_otel_to_elastic.py`**) — same pipeline as Lab 1.
 
@@ -72,6 +72,8 @@ difficulty: ""
 enhanced_loading: null
 ---
 
+**Lab goal:** adopt Datadog-shaped **metric** boards and monitors onto Elastic with governance (rules imported **disabled** until you review).
+
 When the sandbox is ready, open **Terminal** and run:
 
 ```bash
@@ -80,7 +82,7 @@ bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh
 
 That single script:
 
-1. Starts (or reuses) the **OTLP** pipeline — Alloy → Elastic **mOTLP**
+1. Starts (or reuses) the **OTLP** pipeline — Alloy → Elastic **mOTLP** (live **metrics**)
 2. Runs **`datadog-migrate`** on **10** Datadog JSON files in **`assets/datadog/dashboards/`** (`--field-profile otel`, uploads to Kibana)
 3. Converts **4** monitor JSON files under **`assets/datadog/`** and publishes **Rules** via **`publish_datadog_alert_drafts_kibana.py`** (imported **disabled**)
 
@@ -90,8 +92,16 @@ The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — 
 
 Open the **Elastic Serverless** tab:
 
-- **Dashboards** — migrated titles from the Datadog exports
+- **Dashboards** — titles from the Datadog exports; charts should populate from **`metrics-*`**
+- **What & why** — each board opens with a markdown note (**What this dashboard shows** / **Why it matters for metrics adoption**) migrated from the Datadog note widget
+- **Metrics adoption — AI notes** — Agent Builder markdown for Datadog-shaped metrics adoption (also on **Service overview** when attach succeeds)
 - **Observability → Rules** — four workshop rules (imported **disabled**; enable in the UI to test)
+
+Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes**, or:
+
+```bash
+python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --platform datadog --seed-now
+```
 
 ## Troubleshooting
 
@@ -116,4 +126,4 @@ These use integration metric namespaces (`nginx.*`, `postgresql.*`, …), not th
 
 ## Done
 
-**Check** passes when **`build/mig-datadog/yaml/`** has **10** `*.yaml` files, **`build/mig-datadog/migration_report.json`** exists, and **`build/elastic-alerts/`** has **4** `monitor-*-elastic.json` files.
+**Check** passes when **`build/mig-datadog/dashboards/yaml/`** (or legacy **`yaml/`**) has **10** `*.yaml` files, **`migration_report.json`** under **`build/mig-datadog/dashboards/`** (or root), and **`build/elastic-alerts/`** has **4** `monitor-*-elastic.json` files.

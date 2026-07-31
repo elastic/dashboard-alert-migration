@@ -1,6 +1,7 @@
 {
   "uid": "16-dependency-latency",
   "title": "Downstream latency p90",
+  "description": "Downstream latency p90 \u2014 metrics adoption workshop board (What & why panel at top).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,16 +27,16 @@
   "panels": [
     {
       "type": "text",
-      "title": "",
+      "title": "What & why",
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "markdown",
-        "content": "**Server latency** \u2014 mean duration by **http.route** (sum/count). No **histogram_quantile** on Serverless ES|QL; same proxy pattern as **Latency by path** (no outbound ``http_client_duration_*`` in workshop OTLP)."
+        "content": "### What this dashboard shows\nServer mean latency by `http.route` (sum/count) as a downstream/dependency stand-in.\n\n### Why it matters for metrics adoption\nDependency latency boards are high-value for adoption; this shows the same proxy pattern as path latency when client histograms are not in the fleet.\n\n### Notes\nNo outbound `http_client_duration_*` in workshop OTLP; no `histogram_quantile` on Serverless ES|QL."
       }
     },
     {
@@ -45,7 +46,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -81,12 +82,12 @@
     },
     {
       "type": "timeseries",
-      "title": "p90 by route",
+      "title": "Mean latency by route",
       "gridPos": {
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 3
+        "y": 6
       },
       "datasource": {
         "type": "prometheus",
@@ -119,7 +120,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",
@@ -152,7 +153,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 14
       },
       "datasource": {
         "type": "prometheus",

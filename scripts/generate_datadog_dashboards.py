@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Generate sample Datadog dashboard JSON (many widgets with `q` queries) for the workshop."""
+"""Generate sample Datadog dashboard JSON (many widgets with `q` queries) for the workshop.
+
+Each dashboard opens with a **note** widget (**What / Why**) that migrates to Kibana markdown,
+then twelve timeseries widgets. mig-to-kbn ``parse_metric_query`` expects ``by {tags}`` *before*
+``.as_rate()`` / ``.as_count()``.
+"""
 from __future__ import annotations
 
 import json
@@ -9,8 +14,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "datadog" / "dashboards"
 
-# mig-to-kbn ``parse_metric_query`` expects ``by {tags}`` *before* ``.as_rate()`` / ``.as_count()``.
-# Datadog UI often shows ``.as_rate() by {host}``; that order yields ``legacy_unparsed`` → markdown placeholders.
 _DD_FN_THEN_BY = re.compile(
     r"^(.+?\{[^}]*\})\.(as_rate|as_count)\(\)\s+by\s+(\{[^}]+\})\s*$"
 )
@@ -24,11 +27,28 @@ def normalize_datadog_q_for_mig_parser(q: str) -> str:
         return f"{m.group(1)} by {m.group(3)}.{m.group(2)}()"
     return q
 
-# filename, dashboard title, list of (widget_title, query) — one timeseries per query for rich Kibana/Lens imports
-DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
+
+def what_why_md(*, what: str, why: str, note: str = "") -> str:
+    parts = [
+        "### What this dashboard shows",
+        what.strip(),
+        "",
+        "### Why it matters for metrics adoption",
+        why.strip(),
+    ]
+    if note.strip():
+        parts.extend(["", "### Notes", note.strip()])
+    return "\n".join(parts)
+
+
+# filename, title, what, why, optional note, list of (widget_title, query)
+DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
     (
         "01-service-overview.json",
         "Service overview",
+        "Service-level HTTP duration, hits, errors, Apdex-style score, plus host CPU/memory proxies and a few dependency spans (client, servlet, gRPC, DB).",
+        "The first board Datadog shops open for metrics adoption — prove OTel-mapped service metrics land on Elastic and owners can still see golden signals in one place.",
+        "Queries use Datadog-style names; workshop migrate uses `--field-profile otel`.",
         [
             ("HTTP duration by service", "avg:trace.http.request.duration{*} by {service}"),
             ("HTTP hits (count)", "sum:trace.http.request.hits{*}.as_count()"),
@@ -47,6 +67,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "02-error-budget.json",
         "Error budget view",
+        "Error and hit volume, breakdowns by service/resource/status, burn-style hit series, and latency alongside errors.",
+        "Error-budget thinking is a common metrics-adoption goal; this board shows how Datadog-shaped monitors and charts can drive the same conversation on Elastic.",
+        "",
         [
             ("HTTP errors total", "sum:trace.http.request.errors{*}.as_count()"),
             ("HTTP hits total", "sum:trace.http.request.hits{*}.as_count()"),
@@ -65,6 +88,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "03-latency-p95.json",
         "Latency p95",
+        "Percentile and average HTTP durations by resource/service/host, plus client, DB, and gRPC latency companions.",
+        "Latency percentiles are a core Datadog APM habit; migrating them teaches field-profile mapping and review of ES|QL approximations on Elastic.",
+        "",
         [
             ("p95 by resource", "p95:trace.http.request.duration{*} by {resource_name}"),
             ("p99 by service", "p99:trace.http.request.duration{*} by {service}"),
@@ -83,6 +109,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "04-apdex-style.json",
         "Apdex-style satisfaction",
+        "Apdex score and satisfied/tolerating/frustrated counts alongside HTTP duration, hits, and errors.",
+        "Satisfaction metrics are executive-friendly; adopting them on Elastic keeps product conversations on the same observability platform as logs/traces.",
+        "",
         [
             ("Apdex by service", "avg:app.apdex.score{*} by {service}"),
             ("Satisfied count", "sum:app.apdex.satisfied{*}.as_count() by {service}"),
@@ -101,6 +130,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "05-host-cpu.json",
         "Host CPU",
+        "Host CPU user/system/idle/iowait/steal/nice/guest, load averages, context switches, and interrupts.",
+        "Infra metrics adoption often starts with CPU; this board validates host-scoped system metrics after OTel field mapping.",
+        "",
         [
             ("CPU user %", "avg:system.cpu.user{*} by {host}"),
             ("CPU system %", "avg:system.cpu.system{*} by {host}"),
@@ -119,6 +151,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "06-host-memory.json",
         "Host memory",
+        "Usable/used/free memory, swap, slab, page faults, buffers/cache, and commit limit proxies by host.",
+        "Memory pressure boards are a must-have for infra metrics on Elastic once hosts emit OTel system metrics.",
+        "",
         [
             ("Mem pct usable", "avg:system.mem.pct_usable{*} by {host}"),
             ("Mem used", "avg:system.mem.used{*} by {host}"),
@@ -137,6 +172,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "07-disk-io.json",
         "Disk I/O",
+        "Disk utilization, read/write bytes and ops, queue length, and filesystem free/inode proxies by device/host.",
+        "Storage metrics complete the host triad (CPU/mem/disk) for metrics adoption and capacity planning on Elastic.",
+        "",
         [
             ("Disk IO avg", "avg:system.disk.io{*} by {device}"),
             ("Disk in use", "avg:system.disk.in_use{*} by {device}"),
@@ -155,6 +193,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "08-network-bytes.json",
         "Network bytes",
+        "Interface byte/packet rates, TCP retransmits, UDP/errors, connection counts, plus HTTP/DNS traffic context.",
+        "Network metrics explain many app symptoms; adopting them on Elastic closes the gap between host and service views.",
+        "",
         [
             ("Bytes sent rate", "sum:system.net.bytes_sent{*}.as_rate() by {interface}"),
             ("Bytes rcvd rate", "sum:system.net.bytes_rcvd{*}.as_rate() by {interface}"),
@@ -173,6 +214,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "09-container-throttle.json",
         "Container CPU throttle",
+        "Container CPU throttle/usage, memory, network, restarts, OOM, and filesystem usage by container name.",
+        "Container saturation is a modern metrics-adoption priority; this board exercises container_* series after OTel mapping.",
+        "",
         [
             ("CPU throttled", "avg:container.cpu.throttled{*} by {container_name}"),
             ("CPU usage", "avg:container.cpu.usage{*} by {container_name}"),
@@ -191,6 +235,9 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
     (
         "10-log-error-spike.json",
         "Log error spike",
+        "Log-query widgets for error/warn spikes by path/service/namespace plus related trace and disk context metrics.",
+        "Shows metrics+logs together — a key adoption story for customers already shipping logs to Elastic who want metrics and log signals on one board.",
+        "Log widgets may need index/field tuning after migrate; metric widgets use the OTLP fleet.",
         [
             ("Errors by path", 'logs("status:error").index("*").rollup("count").by("@http.url_details.path")'),
             ("Errors by service", 'logs("status:error").index("*").rollup("count").by("service")'),
@@ -209,6 +256,24 @@ DASHBOARDS: list[tuple[str, str, list[tuple[str, str]]]] = [
 ]
 
 
+def widget_note(content: str) -> dict:
+    """Datadog note → Kibana markdown via datadog-migrate."""
+    return {
+        "definition": {
+            "type": "note",
+            "content": content,
+            "background_color": "white",
+            "font_size": "14",
+            "text_align": "left",
+            "show_tick": False,
+            "tick_pos": "50%",
+            "tick_edge": "left",
+            "vertical_align": "top",
+        },
+        "layout": {"x": 0, "y": 0, "width": 12, "height": 3},
+    }
+
+
 def widget_timeseries(title: str, q: str) -> dict:
     q = normalize_datadog_q_for_mig_parser(q)
     return {
@@ -220,35 +285,46 @@ def widget_timeseries(title: str, q: str) -> dict:
     }
 
 
-def apply_grid_layout(widgets: list[dict], *, col_width: int = 6, row_height: int = 4) -> None:
-    """Two columns (6+6 on a 12-wide DD layout)."""
+def apply_grid_layout(widgets: list[dict], *, col_width: int = 6, row_height: int = 4, y_offset: int = 0) -> None:
+    """Two columns (6+6 on a 12-wide DD layout), optionally shifted down for a note strip."""
     for i, w in enumerate(widgets):
         row, col = divmod(i, 2)
         w["layout"] = {
             "x": col * col_width,
-            "y": row * row_height,
+            "y": y_offset + row * row_height,
             "width": col_width,
             "height": row_height,
         }
 
 
-def build_dashboard(title: str, entries: list[tuple[str, str]]) -> dict:
-    widgets = [widget_timeseries(panel_title, q) for panel_title, q in entries]
-    apply_grid_layout(widgets)
+def build_dashboard(
+    title: str,
+    what: str,
+    why: str,
+    note: str,
+    entries: list[tuple[str, str]],
+) -> dict:
+    explain = what_why_md(what=what, why=why, note=note)
+    note_widget = widget_note(explain)
+    timeseries = [widget_timeseries(panel_title, q) for panel_title, q in entries]
+    apply_grid_layout(timeseries, y_offset=note_widget["layout"]["height"])
     return {
         "title": title,
-        "description": "Synthetic Datadog-style export for migration workshop (multi-widget)",
-        "widgets": widgets,
+        "description": f"{title} — metrics adoption workshop board (What & why note at top).",
+        "widgets": [note_widget, *timeseries],
         "template_variables": [{"name": "env", "default": "*", "prefix": "env"}],
     }
 
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    for filename, title, entries in DASHBOARDS:
+    for filename, title, what, why, note, entries in DASHBOARDS:
         path = OUT / filename
-        path.write_text(json.dumps(build_dashboard(title, entries), indent=2) + "\n", encoding="utf-8")
-        print("wrote", path, f"({len(entries)} widgets)")
+        path.write_text(
+            json.dumps(build_dashboard(title, what, why, note, entries), indent=2) + "\n",
+            encoding="utf-8",
+        )
+        print("wrote", path, f"({len(entries)} timeseries + what/why note)")
 
 
 if __name__ == "__main__":

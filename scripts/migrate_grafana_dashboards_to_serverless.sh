@@ -57,15 +57,15 @@ mkdir -p "${OUT}"
 
 WAIT_OTLP=0
 if [ "${WORKSHOP_SKIP_OTEL:-0}" = "1" ]; then
-  echo "==> [1/4] Skipping OTLP (WORKSHOP_SKIP_OTEL=1 — use only if telemetry is already in Elasticsearch)."
+  echo "==> [1/5] Skipping OTLP (WORKSHOP_SKIP_OTEL=1 — use only if telemetry is already in Elasticsearch)."
 elif [ "${WORKSHOP_FORCE_OTEL_RESTART:-0}" != "1" ] \
   && curl -sf --max-time 3 "http://127.0.0.1:12345/metrics" >/dev/null 2>&1 \
   && pgrep -f '[o]tel_workshop_fleet.py' >/dev/null 2>&1; then
-  echo "==> [1/4] OTLP already running (Alloy + fleet). Skipping restart."
+  echo "==> [1/5] OTLP already running (Alloy + fleet). Skipping restart."
   echo "    To force a full restart: WORKSHOP_FORCE_OTEL_RESTART=1 bash ${ROOT}/scripts/migrate_grafana_dashboards_to_serverless.sh"
   WAIT_OTLP=45
 else
-  echo "==> [1/4] OpenTelemetry pipeline (Alloy → Elastic mOTLP + OTLP SDK emitters)..."
+  echo "==> [1/5] OpenTelemetry pipeline (Alloy → Elastic mOTLP + OTLP SDK emitters)..."
   if ! "${ROOT}/scripts/start_workshop_otel.sh"; then
     echo "    ERROR: start_workshop_otel.sh failed (need ES_API_KEY and WORKSHOP_OTLP_ENDPOINT or derivable ES_URL/KIBANA_URL)." >&2
     exit 1
@@ -85,9 +85,9 @@ echo "    If you upgraded the workshop git copy, restart emitters: WORKSHOP_FORC
 ES_ES_ARGS=(--es-url "" --es-api-key "")
 if [ "${WORKSHOP_MIG_ES_VALIDATE:-0}" = "1" ]; then
   ES_ES_ARGS=(--es-url "${ES_URL}" --es-api-key "${ES_API_KEY}" --validate)
-  echo "==> [2/4] grafana-migrate (… + live ES|QL validation: WORKSHOP_MIG_ES_VALIDATE=1)..."
+  echo "==> [2/5] grafana-migrate (… + live ES|QL validation: WORKSHOP_MIG_ES_VALIDATE=1)..."
 else
-  echo "==> [2/4] grafana-migrate (Kibana-only upload; ES_URL in env ignored for validation — WORKSHOP_MIG_ES_VALIDATE=1 to enable)..."
+  echo "==> [2/5] grafana-migrate (Kibana-only upload; ES_URL in env ignored for validation — WORKSHOP_MIG_ES_VALIDATE=1 to enable)..."
 fi
 "${GRAFANA_MIGRATE}" \
   --source files \
@@ -104,11 +104,30 @@ fi
   --ensure-data-views \
   --fetch-alerts
 
-n_yaml="$(find "${OUT}/yaml" -maxdepth 1 -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')"
-echo "    YAML dashboards: ${n_yaml} (under ${OUT}/yaml/)"
+# Support both old layout (yaml/) and new (dashboards/yaml/) from newer mig-to-kbn.
+if [ -d "${OUT}/dashboards/yaml" ]; then
+  n_yaml="$(find "${OUT}/dashboards/yaml" -maxdepth 1 -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')"
+  echo "    YAML dashboards: ${n_yaml} (under ${OUT}/dashboards/yaml/)"
+else
+  n_yaml="$(find "${OUT}/yaml" -maxdepth 1 -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" || n_yaml=0
+  echo "    YAML dashboards: ${n_yaml} (under ${OUT}/yaml/)"
+fi
 
-echo "==> [3/4] Publishing Grafana-derived rules from alert_comparison_results.json (disabled in Kibana by default)..."
-"${PY}" "${ROOT}/tools/publish_grafana_alert_drafts_kibana.py" --comparison "${OUT}/alert_comparison_results.json"
+echo "==> [3/5] Publishing Grafana-derived rules from alert_comparison_results.json (disabled in Kibana by default)..."
+ALERT_COMPARISON="${OUT}/alert_comparison_results.json"
+[ -f "${OUT}/alerts/alert_comparison_results.json" ] && ALERT_COMPARISON="${OUT}/alerts/alert_comparison_results.json"
+"${PY}" "${ROOT}/tools/publish_grafana_alert_drafts_kibana.py" --comparison "${ALERT_COMPARISON}"
 
-echo "==> [4/4] Open Elastic Serverless → Dashboards + Rules. Artifacts: ${OUT}/migration_report.json, ${OUT}/alert_comparison_results.json"
+echo "==> [4/5] Agent Builder metrics-adoption notes (markdown panels + workflow)..."
+if [ "${WORKSHOP_SKIP_AI_NOTES:-0}" = "1" ]; then
+  echo "    Skipping (WORKSHOP_SKIP_AI_NOTES=1)."
+else
+  "${PY}" "${ROOT}/scripts/ensure_ai_recommendation_panels.py" --platform grafana --seed-now \
+    || echo "    WARN: ensure_ai_recommendation_panels.py failed (dashboards still uploaded)." >&2
+  "${PY}" "${ROOT}/scripts/deploy_workshop_workflows.py" metrics-adoption-recommendations.yaml \
+    || echo "    WARN: deploy_workshop_workflows.py failed (AI notes panels may still work via --seed-now)." >&2
+fi
+
+echo "==> [5/5] Open Elastic Serverless → Dashboards (incl. **Metrics adoption — AI notes**) + Rules."
+echo "    Artifacts: ${OUT}/migration_report.json (or dashboards/), alert_comparison_results.json (or alerts/)"
 echo "==> Done."

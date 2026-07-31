@@ -525,5 +525,41 @@ find "$TRACK_ROOT" -type f \( -name 'setup-es3-api' -o -name 'check-es3-api' -o 
 [[ -f "$TRACK_ROOT/scripts/ensure_workshop_tree.sh" ]] && chmod +x "$TRACK_ROOT/scripts/ensure_workshop_tree.sh"
 [[ -f "$TRACK_ROOT/scripts/update_mig_to_kbn.sh" ]] && chmod +x "$TRACK_ROOT/scripts/update_mig_to_kbn.sh"
 [[ -f "$TRACK_ROOT/scripts/push_git_and_instruqt.sh" ]] && chmod +x "$TRACK_ROOT/scripts/push_git_and_instruqt.sh"
+[[ -f "$TRACK_ROOT/scripts/ensure_ai_recommendation_panels.py" ]] && chmod +x "$TRACK_ROOT/scripts/ensure_ai_recommendation_panels.py"
+[[ -f "$TRACK_ROOT/scripts/deploy_workshop_workflows.py" ]] && chmod +x "$TRACK_ROOT/scripts/deploy_workshop_workflows.py"
+
+# ---------------------------------------------------------------------------
+# Agent Builder / Workflows prep (metrics-adoption AI notes on dashboards)
+# Full seed runs after Lab migrate scripts; here we only create the ES index + enable UI.
+# ---------------------------------------------------------------------------
+if [ -n "${ES_URL:-}" ] && { [ -n "${WORKSHOP_ES_API_KEY:-}" ] || [ -n "${ELASTICSEARCH_PASSWORD:-}" ]; }; then
+  echo "Ensuring Elasticsearch index metrics-adoption-recommendations exists..."
+  if [ -n "${WORKSHOP_ES_API_KEY:-}" ]; then
+    _rec_ix=$(curl -sS -o /tmp/rec-index-body.json -w "%{http_code}" -X PUT "${ES_URL}/metrics-adoption-recommendations" \
+      -H "Authorization: ApiKey ${WORKSHOP_ES_API_KEY}" \
+      -H "Content-Type: application/json" \
+      -d '{"mappings":{"properties":{"@timestamp":{"type":"date"},"execution_id":{"type":"keyword"},"workflow_name":{"type":"keyword"},"source":{"type":"keyword"},"dashboard_platform":{"type":"keyword"},"recommendation":{"type":"text"}}}}')
+  else
+    _rec_ix=$(curl -sS -o /tmp/rec-index-body.json -w "%{http_code}" -X PUT "${ES_URL}/metrics-adoption-recommendations" \
+      -u "admin:${ELASTICSEARCH_PASSWORD}" \
+      -H "Content-Type: application/json" \
+      -d '{"mappings":{"properties":{"@timestamp":{"type":"date"},"execution_id":{"type":"keyword"},"workflow_name":{"type":"keyword"},"source":{"type":"keyword"},"dashboard_platform":{"type":"keyword"},"recommendation":{"type":"text"}}}}')
+  fi
+  echo "DEBUG: PUT metrics-adoption-recommendations HTTP ${_rec_ix}"
+fi
+
+if [ -n "${KIBANA_URL:-}" ] && [ -n "${WORKSHOP_ES_API_KEY:-}" ]; then
+  echo "Enabling workflows:ui:enabled Kibana setting (Agent Builder recommendations workflow)..."
+  _kibana_version=$(curl -s "${KIBANA_URL}/api/status" \
+    -H "Authorization: ApiKey ${WORKSHOP_ES_API_KEY}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('version',{}).get('number','9.4.0'))" 2>/dev/null || echo "9.4.0")
+  _wf_http=$(curl -s -o /tmp/wf-setting.json -w "%{http_code}" \
+    -X PUT "${KIBANA_URL}/api/saved_objects/config/${_kibana_version}" \
+    -H "Content-Type: application/json" \
+    -H "kbn-xsrf: true" \
+    -H "x-elastic-internal-origin: kibana" \
+    -H "Authorization: ApiKey ${WORKSHOP_ES_API_KEY}" \
+    -d '{"attributes":{"workflows:ui:enabled":true}}')
+  echo "DEBUG: workflows setting → HTTP ${_wf_http}"
+fi
 
 echo "Track bootstrap complete."

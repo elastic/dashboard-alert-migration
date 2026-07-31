@@ -1,18 +1,19 @@
 ---
 name: workshop-datadog-dashboards-to-elastic
 description: >
-  Workshop skill for Datadog-customer migrations to Elastic Observability Serverless: bulk-convert Datadog-style dashboard
-  JSON into Kibana dashboard drafts via CLI; pair with kibana-dashboards Agent Skill and Cursor for query rewriting.
+  Workshop skill for metrics adoption on Elastic Observability Serverless (existing customers):
+  bulk-convert Datadog-style metric dashboard JSON into Kibana via datadog-migrate;
+  pair with kibana-dashboards Agent Skill and Cursor for query rewriting.
 metadata:
   author: workshop
   version: 0.2.0
 ---
 
-# Datadog dashboards → Elastic (workshop)
+# Adopt Datadog metric dashboards → Elastic (workshop)
 
 ## When to use
 
-Migrating **Datadog dashboard** exports via **[observability-migration-platform](https://github.com/elastic/observability-migration-platform)** **`datadog-migrate`**
+**Metrics adoption** for existing Elastic customers: bring **Datadog dashboard** exports via **[observability-migration-platform](https://github.com/elastic/observability-migration-platform)** **`datadog-migrate`**
 (**`--field-profile otel`**, upstream default) into **Kibana** on **Observability Serverless**, optionally with **Cursor** + [Elastic Agent Skills](https://github.com/elastic/agent-skills).
 Legacy **`datadog_dashboard_to_elastic.py`** + **`publish_grafana_drafts_kibana.py`** remain for comparison.
 
@@ -51,7 +52,7 @@ python3 tools/publish_datadog_alert_drafts_kibana.py --alerts-dir build/elastic-
 
 1. Open the repo in **Cursor** (or your agentic IDE).
 2. Install upstream skills (for example `npx skills add elastic/agent-skills --skill kibana-dashboards`).
-3. Paste one Datadog dashboard JSON and one generated **`build/mig-datadog/yaml/*.yaml`** snippet (or legacy `*-elastic-draft.json`); ask the model to propose **ES|QL** or metric-query equivalents and **Lens** shapes for **Serverless**.
+3. Paste one Datadog dashboard JSON and one generated **`build/mig-datadog/dashboards/yaml/*.yaml`** snippet (or legacy **`yaml/`**, or `*-elastic-draft.json`); ask the model to propose **ES|QL** or metric-query equivalents and **Lens** shapes for **Serverless**.
 4. In Cursor, use env from `source ~/.bashrc` (`ES_URL`, `ES_PASSWORD`, `ES_API_KEY`) when following the **kibana-dashboards** skill for API calls.
 
 ## Safety

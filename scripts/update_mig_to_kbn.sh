@@ -126,6 +126,9 @@ update_via_vendored_tree() {
   _write_upstream_lock "$UP"
   rsync -a --delete --exclude='.git' "${UP}/" "${MIG}/"
   rm -rf "${TDIR}"
+  if [ -x "${ROOT}/scripts/apply_workshop_mig_patches.sh" ]; then
+    bash "${ROOT}/scripts/apply_workshop_mig_patches.sh"
+  fi
   return 0
 }
 

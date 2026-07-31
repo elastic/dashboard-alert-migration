@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Generate sample Grafana dashboard JSON files (Prometheus datasource) for the workshop.
 
-Each dashboard is a small "mini-operations" view: markdown context, a stat KPI, two time
-series (aggregate + dimensional breakdown), and a table snapshot. PromQL avoids ``topk`` /
-``bottomk`` so mig-to-kbn native PROMQL translation can migrate every panel (those
+Each dashboard is a small "mini-operations" view: a **What / Why** markdown strip, a stat KPI,
+two time series (aggregate + dimensional breakdown), and a table snapshot. PromQL avoids
+``topk`` / ``bottomk`` so mig-to-kbn native PROMQL translation can migrate every panel (those
 aggregates are not supported by the ES PROMQL bridge — see mig-to-kbn panels.py).
 
 **PromQL label keys** must match **Elasticsearch column names** for native ``PROMQL`` on
@@ -24,12 +24,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "grafana"
 
+
+def what_why_md(*, what: str, why: str, note: str = "") -> str:
+    """Top-of-dashboard explanation — migrates to Kibana markdown via grafana text panels."""
+    parts = [
+        "### What this dashboard shows",
+        what.strip(),
+        "",
+        "### Why it matters for metrics adoption",
+        why.strip(),
+    ]
+    if note.strip():
+        parts.extend(["", "### Notes", note.strip()])
+    return "\n".join(parts)
+
+
 # (filename, title, intro_md, stat_title, stat_expr, ts1_title, ts1_expr, ts2_title, ts2_expr, table_title, table_expr)
 DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] = [
     (
         "01-overview.json",
         "Traffic overview",
-        "**Traffic overview** — end-to-end HTTP volume from the workshop emitters. Compare the headline KPI with dimensional splits.",
+        what_why_md(
+            what="End-to-end HTTP request volume from the workshop OTLP emitters: a headline rate KPI, method and status splits, and an instant status snapshot.",
+            why="Gives existing Elastic customers a first **metrics** board that proves live `metrics-*` ingest and golden-signal traffic before diving into latency or errors.",
+        ),
         "Requests/sec (total)",
         "sum(rate(http_requests_total[5m]))",
         "Total request rate",
@@ -42,7 +60,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "02-request-rate.json",
         "Request rate by service",
-        "**Service throughput** — per-service rate plus **single-label** splits (route and status); multi-label ``sum by`` breaks native PROMQL in Lens.",
+        what_why_md(
+            what="Per-service HTTP throughput plus **single-label** splits by route and status (multi-label `sum by` is avoided so native PromQL migrates cleanly).",
+            why="Service-scoped rate is the usual first metrics adoption check: confirm `service.name` cardinality and that teams can find *their* traffic on Elastic.",
+        ),
         "Requests/sec (all)",
         "sum(rate(http_requests_total[5m]))",
         "Rate by service",
@@ -55,7 +76,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "03-latency-p95.json",
         "Latency p95",
-        "**Latency** — mean duration by **service.name** (histogram sum/count). Serverless has no **histogram_quantile** in ES|QL; second chart shows observation rate for contrast.",
+        what_why_md(
+            what="Mean request duration by `service.name` (histogram sum/count) and observation rate for contrast. Serverless ES|QL has no `histogram_quantile`, so this is the stable p95-style proxy.",
+            why="Latency is a core SLO input; adopting metrics on Elastic means trusting duration charts against the same OTLP series apps already emit.",
+            note="Title keeps a familiar p95 framing; values are mean(sum/count), not true histogram quantiles.",
+        ),
         "Duration samples/sec",
         "sum(rate(http_request_duration_seconds_count[5m]))",
         "Mean latency by service",
@@ -68,7 +93,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "04-error-rate.json",
         "Error rate",
-        "**Errors** — 5xx share of traffic plus raw server-error rate for context.",
+        what_why_md(
+            what="5xx share of HTTP traffic and raw server-error rate, with an instant status breakdown.",
+            why="Error rate is the fastest way to validate that migrated PromQL error panels land on live Elastic metrics and support alert drafts.",
+        ),
         "5xx share",
         "sum(rate(http_requests_total{http.response.status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))",
         "Error ratio",
@@ -81,7 +109,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "05-operation-errors.json",
         "Operation errors by reason",
-        "**Business errors** — ``operation_errors_total`` by ``reason``.",
+        what_why_md(
+            what="Business/application `operation_errors_total` by `reason` and by `service.name`.",
+            why="Shows metrics beyond HTTP counters — domain error reasons teams already track in PromQL can adopt onto Elastic without rebuilding taxonomy.",
+        ),
         "Operation errors/sec",
         "sum(rate(operation_errors_total[5m]))",
         "By reason",
@@ -94,7 +125,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "06-top-entities.json",
         "Top services by traffic",
-        "**Service ranking** — Grafana ``topk`` is omitted so migration stays on the supported PromQL subset; use Lens Top Values or ``LIMIT`` in Kibana for strict top-N.",
+        what_why_md(
+            what="Service ranking via rate by `service.name` (and method). Grafana `topk` is omitted so migration stays on the supported PromQL subset.",
+            why="Platform teams adopt metrics when they can answer “who is hottest right now?” on Elastic; Lens Top Values / `LIMIT` cover strict top-N after import.",
+        ),
         "Total requests/sec",
         "sum(rate(http_requests_total[5m]))",
         "Rate by service",
@@ -107,7 +141,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "07-post-path.json",
         "POST /api/v1/orders volume",
-        "**Hot POST route** — ``POST /api/v1/orders`` (emitted by the fleet) vs all POST traffic.",
+        what_why_md(
+            what="Hot route focus: `POST /api/v1/orders` (fleet-emitted) versus all POST traffic, plus POST-by-route snapshot.",
+            why="Route-scoped metrics prove that filters (`http.route`, method) survive migration — critical for app-owner dashboards during metrics adoption.",
+        ),
         "POST /api/v1/orders rps",
         "sum(rate(http_requests_total{http.route=\"/api/v1/orders\",http.request.method=\"POST\"}[5m]))",
         "Orders POST rate",
@@ -120,7 +157,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "08-latency-by-path.json",
         "Latency by path",
-        "**Path latency** — mean request duration per **http.route** (sum/count from **http_request_duration_seconds_***). Serverless ES|QL has no **histogram_quantile**, so migrated Lens uses this stable proxy instead of p99/p90 from buckets.",
+        what_why_md(
+            what="Mean request duration per `http.route` from `http_request_duration_seconds_*` sum/count, plus observation rate.",
+            why="Path latency is how SRE teams adopt endpoint SLOs on Elastic when true histogram quantiles are not available in ES|QL.",
+            note="No `histogram_quantile` on Serverless ES|QL — mean(sum/count) is the intentional proxy.",
+        ),
         "Request count/sec",
         "sum(rate(http_request_duration_seconds_count[5m]))",
         "Mean latency by path",
@@ -133,7 +174,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "09-status-codes.json",
         "Status codes",
-        "**HTTP status mix** — rates per status and per method.",
+        what_why_md(
+            what="HTTP status mix: rates by status code and by method, with an instant status snapshot.",
+            why="Status breakdowns are the bridge from traffic metrics to error budgets — a standard board when expanding metrics coverage on Elastic.",
+        ),
         "All responses/sec",
         "sum(rate(http_requests_total[5m]))",
         "By status",
@@ -146,7 +190,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "10-slo-burn.json",
         "SLO-style availability",
-        "**Availability window** — 1h error budget style ratio plus component series.",
+        what_why_md(
+            what="1h availability-style ratio (1 − 5xx/total) plus component 5xx and total traffic series.",
+            why="Shows how metrics adoption supports SLO conversations on Elastic using the same PromQL intent teams already document for burn rates.",
+        ),
         "Availability (1h)",
         "1 - (sum(rate(http_requests_total{http.response.status_code=~\"5..\"}[1h])) / sum(rate(http_requests_total[1h])))",
         "Availability",
@@ -159,7 +206,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "11-entity-errors.json",
         "Errors by service",
-        "**Errors per service** — pairs operation errors with HTTP context.",
+        what_why_md(
+            what="Operation errors and HTTP 5xx side-by-side by `service.name`.",
+            why="Correlating app and HTTP errors on one metrics board is a typical adoption win versus keeping those signals in separate tools.",
+        ),
         "Op errors/sec",
         "sum(rate(operation_errors_total[5m]))",
         "Op errors by service",
@@ -172,7 +222,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "12-heatmap-style.json",
         "Request mix",
-        "**Request mix** — service volume plus method and status as **separate** single-label charts (see generator docstring).",
+        what_why_md(
+            what="Service volume plus method and status as **separate** single-label charts (multi-label PromQL avoided for Lens).",
+            why="Teaches the metrics-adoption pattern of comparable breakdowns across panels when one chart cannot carry every dimension.",
+        ),
         "Requests/sec",
         "sum(rate(http_requests_total[5m]))",
         "Requests by service",
@@ -185,7 +238,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "13-cpu-saturation.json",
         "Throughput by host",
-        "**Saturation proxy** — HTTP request rate by ``host.name`` (workshop OTLP has no ``process_cpu_seconds_total``).",
+        what_why_md(
+            what="HTTP request rate by `host.name` and by service — a saturation/load proxy.",
+            why="Infra-shaped views from PromQL still matter for metrics adoption; this board maps host dimensions onto Elastic without requiring process CPU counters.",
+            note="Workshop OTLP has no `process_cpu_seconds_total`; host throughput is the intentional stand-in.",
+        ),
         "Requests/sec (total)",
         "sum(rate(http_requests_total[5m]))",
         "Request rate by host",
@@ -198,7 +255,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "14-memory-working-set.json",
         "Workload mix",
-        "**Workload** — HTTP traffic plus operation errors (no ``process_resident_memory_bytes`` in workshop OTLP).",
+        what_why_md(
+            what="HTTP traffic plus operation errors (volume and by service/reason) as a workload mix view.",
+            why="When memory metrics are not yet on Elastic, this board still teaches mixed-signal dashboards while teams expand infra metric coverage.",
+            note="No `process_resident_memory_bytes` in workshop OTLP.",
+        ),
         "Requests/sec",
         "sum(rate(http_requests_total[5m]))",
         "Operation errors/sec",
@@ -211,8 +272,14 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "15-gc-pause-rate.json",
         "GC pause indicator",
-        "**Why not real Go GC metrics here:** `go_gc_duration_seconds_*` histogram parts are often stored in Elasticsearch as **double** gauges, while ES|QL **RATE** only accepts **counter** fields — migrated panels then fail at query time. "
-        "This board keeps the **GC / runtime pressure** story but uses the workshop fleet’s **counter** metrics (`http_requests_total`, `operation_errors_total`) so native PromQL → ES|QL works on Serverless.",
+        what_why_md(
+            what="Runtime-pressure story using fleet **counter** metrics (`http_requests_total`, `operation_errors_total`) by host and service.",
+            why="Illustrates honest metrics adoption: prefer queries that work on Elastic field types over importing PromQL that cannot run (e.g. RATE on gauge GC histograms).",
+            note=(
+                "`go_gc_duration_seconds_*` often lands as double gauges; ES|QL RATE needs counters. "
+                "This board keeps the GC/runtime narrative with counter-backed proxies."
+            ),
+        ),
         "HTTP requests/sec",
         "sum(rate(http_requests_total[5m]))",
         "Request burst by host",
@@ -225,7 +292,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "16-dependency-latency.json",
         "Downstream latency p90",
-        "**Server latency** — mean duration by **http.route** (sum/count). No **histogram_quantile** on Serverless ES|QL; same proxy pattern as **Latency by path** (no outbound ``http_client_duration_*`` in workshop OTLP).",
+        what_why_md(
+            what="Server mean latency by `http.route` (sum/count) as a downstream/dependency stand-in.",
+            why="Dependency latency boards are high-value for adoption; this shows the same proxy pattern as path latency when client histograms are not in the fleet.",
+            note="No outbound `http_client_duration_*` in workshop OTLP; no `histogram_quantile` on Serverless ES|QL.",
+        ),
         "Request count/sec",
         "sum(rate(http_request_duration_seconds_count[5m]))",
         "Mean latency by route",
@@ -238,7 +309,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "17-queue-depth.json",
         "Queue depth stand-in",
-        "**Queues** — request **rate** by route and service (no ``workqueue_depth`` in workshop OTLP).",
+        what_why_md(
+            what="Request **rate** by route and service as a queue/backlog stand-in.",
+            why="Many shops adopt metrics with backlog proxies before true queue gauges exist on Elastic — this board models that incremental path.",
+            note="No `workqueue_depth` in workshop OTLP.",
+        ),
         "Total requests/sec",
         "sum(rate(http_requests_total[5m]))",
         "Rate by route",
@@ -251,7 +326,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "18-cache-hit-ratio.json",
         "Success share (2xx)",
-        "**Availability proxy** — 2xx share of traffic (no ``cache_*`` counters in workshop OTLP).",
+        what_why_md(
+            what="2xx share of traffic and absolute 2xx vs non-2xx rates.",
+            why="Success-ratio boards are a lightweight availability metric teams can adopt early while richer cache/hit metrics are still being instrumented.",
+            note="No `cache_*` counters in workshop OTLP; 2xx share is the intentional proxy.",
+        ),
         "2xx share",
         "sum(rate(http_requests_total{http.response.status_code=~\"2..\"}[5m])) / sum(rate(http_requests_total[5m]))",
         "2xx share",
@@ -264,7 +343,11 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "19-pod-restarts.json",
         "Error churn",
-        "**Churn proxy** — operation error rates (no Kubernetes metrics in workshop OTLP).",
+        what_why_md(
+            what="Operation error rates by reason and service as a churn/restart stand-in.",
+            why="Demonstrates adopting stability metrics on Elastic even when Kubernetes restart series are not yet ingested.",
+            note="No Kubernetes metrics in workshop OTLP.",
+        ),
         "Operation errors/sec",
         "sum(rate(operation_errors_total[5m]))",
         "Errors by reason",
@@ -277,7 +360,10 @@ DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] =
     (
         "20-endpoint-slo.json",
         "Endpoint availability",
-        "**Success share** — non-5xx fraction over 30m.",
+        what_why_md(
+            what="Non-5xx success fraction over 30m with successful vs total rps.",
+            why="A compact endpoint SLO-style metrics board for stakeholders reviewing Elastic as the system of record for availability.",
+        ),
         "Success ratio (30m)",
         "sum(rate(http_requests_total{http.response.status_code!~\"5..\"}[30m])) / sum(rate(http_requests_total[30m]))",
         "Success ratio",
@@ -307,10 +393,10 @@ def _templating() -> dict:
     }
 
 
-def panel_text(content: str, y: int, h: int = 3) -> dict:
+def panel_text(content: str, y: int, h: int = 6) -> dict:
     return {
         "type": "text",
-        "title": "",
+        "title": "What & why",
         "gridPos": {"h": h, "w": 24, "x": 0, "y": y},
         "options": {"mode": "markdown", "content": content},
     }
@@ -383,7 +469,7 @@ def build_dashboard(uid: str, spec: tuple[str, str, str, str, str, str, str, str
         tbl_expr,
     ) = spec
     y0 = 0
-    h_intro = 3
+    h_intro = 6
     y1 = y0 + h_intro
     h_row1 = 8
     y2 = y1 + h_row1
@@ -398,6 +484,7 @@ def build_dashboard(uid: str, spec: tuple[str, str, str, str, str, str, str, str
     return {
         "uid": uid,
         "title": title,
+        "description": f"{title} — metrics adoption workshop board (What & why panel at top).",
         "timezone": "browser",
         "schemaVersion": 39,
         "version": 1,
@@ -412,7 +499,6 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for spec in DASH_SPECS:
         filename = spec[0]
-        title = spec[1]
         uid = filename.replace(".json", "").replace("/", "-")
         path = OUT / filename
         path.write_text(json.dumps(build_dashboard(uid, spec), indent=2) + "\n", encoding="utf-8")
