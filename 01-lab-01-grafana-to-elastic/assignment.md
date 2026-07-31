@@ -145,7 +145,7 @@ The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — 
 Open the **Elastic Serverless** tab:
 
 - **Dashboards** — titles should match the Grafana exports; charts should populate from **`metrics-*`**
-- **What & why** — each board opens with a markdown strip (**What this dashboard shows** / **Why it matters for metrics adoption**) migrated from the Grafana text panel
+- **AI notes** — each board gets a bottom **Agent Builder** markdown strip (`workshop-ai-rec-grafana`) updated by the **Metrics adoption — AI dashboard notes** workflow (same dbmonitoring pattern)
 - **Metrics adoption — AI notes** — Agent Builder markdown for PromQL/Grafana-shaped metrics adoption (also appended to **Traffic overview** when attach succeeds)
 - **Observability → Rules** — two workshop rules (imported **disabled**; enable in the UI to test)
 

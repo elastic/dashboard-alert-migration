@@ -1,7 +1,7 @@
 {
   "uid": "08-latency-by-path",
   "title": "Latency by path",
-  "description": "Latency by path \u2014 metrics adoption workshop board (What & why panel at top).",
+  "description": "Latency by path \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,27 +26,13 @@
   },
   "panels": [
     {
-      "type": "text",
-      "title": "What & why",
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "options": {
-        "mode": "markdown",
-        "content": "### What this dashboard shows\nMean request duration per `http.route` from `http_request_duration_seconds_*` sum/count, plus observation rate.\n\n### Why it matters for metrics adoption\nPath latency is how SRE teams adopt endpoint SLOs on Elastic when true histogram quantiles are not available in ES|QL.\n\n### Notes\nNo `histogram_quantile` on Serverless ES|QL \u2014 mean(sum/count) is the intentional proxy."
-      }
-    },
-    {
       "type": "stat",
       "title": "Request count/sec",
       "gridPos": {
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -87,7 +73,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -120,7 +106,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -153,7 +139,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",

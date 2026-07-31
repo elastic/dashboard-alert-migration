@@ -1,7 +1,7 @@
 {
   "uid": "07-post-path",
   "title": "POST /api/v1/orders volume",
-  "description": "POST /api/v1/orders volume \u2014 metrics adoption workshop board (What & why panel at top).",
+  "description": "POST /api/v1/orders volume \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,27 +26,13 @@
   },
   "panels": [
     {
-      "type": "text",
-      "title": "What & why",
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "options": {
-        "mode": "markdown",
-        "content": "### What this dashboard shows\nHot route focus: `POST /api/v1/orders` (fleet-emitted) versus all POST traffic, plus POST-by-route snapshot.\n\n### Why it matters for metrics adoption\nRoute-scoped metrics prove that filters (`http.route`, method) survive migration \u2014 critical for app-owner dashboards during metrics adoption."
-      }
-    },
-    {
       "type": "stat",
       "title": "POST /api/v1/orders rps",
       "gridPos": {
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -87,7 +73,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -120,7 +106,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -153,7 +139,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",

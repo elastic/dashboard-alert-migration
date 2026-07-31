@@ -142,7 +142,7 @@ The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — 
 Open the **Elastic Serverless** tab:
 
 - **Dashboards** — titles from the Datadog exports; charts should populate from **`metrics-*`**
-- **What & why** — each board opens with a markdown note (**What this dashboard shows** / **Why it matters for metrics adoption**) migrated from the Datadog note widget
+- **AI notes** — each board gets a bottom **Agent Builder** markdown strip (`workshop-ai-rec-datadog`) updated by the **Metrics adoption — AI dashboard notes** workflow (same dbmonitoring pattern)
 - **Metrics adoption — AI notes** — Agent Builder markdown for Datadog-shaped metrics adoption (also on **Service overview** when attach succeeds)
 - **Observability → Rules** — four workshop rules (imported **disabled**; enable in the UI to test)
 

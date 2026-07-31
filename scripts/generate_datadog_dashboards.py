@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Generate sample Datadog dashboard JSON (many widgets with `q` queries) for the workshop.
 
-Each dashboard opens with a **note** widget (**What / Why**) that migrates to Kibana markdown,
-then twelve timeseries widgets. mig-to-kbn ``parse_metric_query`` expects ``by {tags}`` *before*
-``.as_rate()`` / ``.as_count()``.
+Each dashboard has twelve timeseries widgets. Agent Builder AI notes are attached post-migrate
+(``scripts/ensure_ai_recommendation_panels.py``), not as static note widgets. mig-to-kbn
+``parse_metric_query`` expects ``by {tags}`` *before* ``.as_rate()`` / ``.as_count()``.
 """
 from __future__ import annotations
 
@@ -28,20 +28,8 @@ def normalize_datadog_q_for_mig_parser(q: str) -> str:
     return q
 
 
-def what_why_md(*, what: str, why: str, note: str = "") -> str:
-    parts = [
-        "### What this dashboard shows",
-        what.strip(),
-        "",
-        "### Why it matters for metrics adoption",
-        why.strip(),
-    ]
-    if note.strip():
-        parts.extend(["", "### Notes", note.strip()])
-    return "\n".join(parts)
-
-
 # filename, title, what, why, optional note, list of (widget_title, query)
+# what/why/note are author documentation only (not emitted into JSON).
 DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
     (
         "01-service-overview.json",
@@ -256,24 +244,6 @@ DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
 ]
 
 
-def widget_note(content: str) -> dict:
-    """Datadog note → Kibana markdown via datadog-migrate."""
-    return {
-        "definition": {
-            "type": "note",
-            "content": content,
-            "background_color": "white",
-            "font_size": "14",
-            "text_align": "left",
-            "show_tick": False,
-            "tick_pos": "50%",
-            "tick_edge": "left",
-            "vertical_align": "top",
-        },
-        "layout": {"x": 0, "y": 0, "width": 12, "height": 3},
-    }
-
-
 def widget_timeseries(title: str, q: str) -> dict:
     q = normalize_datadog_q_for_mig_parser(q)
     return {
@@ -304,14 +274,13 @@ def build_dashboard(
     note: str,
     entries: list[tuple[str, str]],
 ) -> dict:
-    explain = what_why_md(what=what, why=why, note=note)
-    note_widget = widget_note(explain)
+    del what, why, note  # author notes only; AI analysis is attached after migrate
     timeseries = [widget_timeseries(panel_title, q) for panel_title, q in entries]
-    apply_grid_layout(timeseries, y_offset=note_widget["layout"]["height"])
+    apply_grid_layout(timeseries, y_offset=0)
     return {
         "title": title,
-        "description": f"{title} — metrics adoption workshop board (What & why note at top).",
-        "widgets": [note_widget, *timeseries],
+        "description": f"{title} — metrics adoption workshop board (AI notes attached after migrate).",
+        "widgets": timeseries,
         "template_variables": [{"name": "env", "default": "*", "prefix": "env"}],
     }
 
@@ -324,7 +293,7 @@ def main() -> None:
             json.dumps(build_dashboard(title, what, why, note, entries), indent=2) + "\n",
             encoding="utf-8",
         )
-        print("wrote", path, f"({len(entries)} timeseries + what/why note)")
+        print("wrote", path, f"({len(entries)} timeseries)")
 
 
 if __name__ == "__main__":

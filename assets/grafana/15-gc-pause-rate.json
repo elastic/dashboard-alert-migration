@@ -1,7 +1,7 @@
 {
   "uid": "15-gc-pause-rate",
   "title": "GC pause indicator",
-  "description": "GC pause indicator \u2014 metrics adoption workshop board (What & why panel at top).",
+  "description": "GC pause indicator \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,27 +26,13 @@
   },
   "panels": [
     {
-      "type": "text",
-      "title": "What & why",
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "options": {
-        "mode": "markdown",
-        "content": "### What this dashboard shows\nRuntime-pressure story using fleet **counter** metrics (`http_requests_total`, `operation_errors_total`) by host and service.\n\n### Why it matters for metrics adoption\nIllustrates honest metrics adoption: prefer queries that work on Elastic field types over importing PromQL that cannot run (e.g. RATE on gauge GC histograms).\n\n### Notes\n`go_gc_duration_seconds_*` often lands as double gauges; ES|QL RATE needs counters. This board keeps the GC/runtime narrative with counter-backed proxies."
-      }
-    },
-    {
       "type": "stat",
       "title": "HTTP requests/sec",
       "gridPos": {
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -87,7 +73,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -120,7 +106,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -153,7 +139,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",

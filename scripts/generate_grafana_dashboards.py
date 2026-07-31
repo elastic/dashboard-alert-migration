@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate sample Grafana dashboard JSON files (Prometheus datasource) for the workshop.
 
-Each dashboard is a small "mini-operations" view: a **What / Why** markdown strip, a stat KPI,
-two time series (aggregate + dimensional breakdown), and a table snapshot. PromQL avoids
+Each dashboard is a small "mini-operations" view: a stat KPI, two time series (aggregate +
+dimensional breakdown), and a table snapshot. Agent Builder AI notes are attached post-migrate
+(``scripts/ensure_ai_recommendation_panels.py``), not as static text panels. PromQL avoids
 ``topk`` / ``bottomk`` so mig-to-kbn native PROMQL translation can migrate every panel (those
 aggregates are not supported by the ES PROMQL bridge — see mig-to-kbn panels.py).
 
@@ -26,20 +27,15 @@ OUT = ROOT / "assets" / "grafana"
 
 
 def what_why_md(*, what: str, why: str, note: str = "") -> str:
-    """Top-of-dashboard explanation — migrates to Kibana markdown via grafana text panels."""
-    parts = [
-        "### What this dashboard shows",
-        what.strip(),
-        "",
-        "### Why it matters for metrics adoption",
-        why.strip(),
-    ]
+    """Legacy helper kept so DASH_SPECS tuples stay readable; content is not emitted into JSON."""
+    parts = [what.strip(), why.strip()]
     if note.strip():
-        parts.extend(["", "### Notes", note.strip()])
+        parts.append(note.strip())
     return "\n".join(parts)
 
 
-# (filename, title, intro_md, stat_title, stat_expr, ts1_title, ts1_expr, ts2_title, ts2_expr, table_title, table_expr)
+# (filename, title, _unused_intro, stat_title, stat_expr, ts1_title, ts1_expr, ts2_title, ts2_expr, table_title, table_expr)
+# Intro strings document intent for authors; AI analysis is attached in Kibana after migrate.
 DASH_SPECS: list[tuple[str, str, str, str, str, str, str, str, str, str, str]] = [
     (
         "01-overview.json",
@@ -393,15 +389,6 @@ def _templating() -> dict:
     }
 
 
-def panel_text(content: str, y: int, h: int = 6) -> dict:
-    return {
-        "type": "text",
-        "title": "What & why",
-        "gridPos": {"h": h, "w": 24, "x": 0, "y": y},
-        "options": {"mode": "markdown", "content": content},
-    }
-
-
 def panel_stat(title: str, expr: str, x: int, y: int, w: int, h: int) -> dict:
     return {
         "type": "stat",
@@ -458,7 +445,7 @@ def build_dashboard(uid: str, spec: tuple[str, str, str, str, str, str, str, str
     (
         _fn,
         title,
-        intro,
+        _intro,
         stat_title,
         stat_expr,
         ts1_title,
@@ -468,14 +455,11 @@ def build_dashboard(uid: str, spec: tuple[str, str, str, str, str, str, str, str
         tbl_title,
         tbl_expr,
     ) = spec
-    y0 = 0
-    h_intro = 6
-    y1 = y0 + h_intro
+    y1 = 0
     h_row1 = 8
     y2 = y1 + h_row1
     h_row2 = 8
     panels: list[dict] = [
-        panel_text(intro, y=y0, h=h_intro),
         panel_stat(stat_title, stat_expr, x=0, y=y1, w=6, h=h_row1),
         panel_timeseries(ts1_title, ts1_expr, x=6, y=y1, w=18, h=h_row1),
         panel_timeseries(ts2_title, ts2_expr, x=0, y=y2, w=12, h=h_row2),
@@ -484,7 +468,7 @@ def build_dashboard(uid: str, spec: tuple[str, str, str, str, str, str, str, str
     return {
         "uid": uid,
         "title": title,
-        "description": f"{title} — metrics adoption workshop board (What & why panel at top).",
+        "description": f"{title} — metrics adoption workshop board (AI notes attached after migrate).",
         "timezone": "browser",
         "schemaVersion": 39,
         "version": 1,
