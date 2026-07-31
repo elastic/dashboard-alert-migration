@@ -98,9 +98,12 @@ Open the **Elastic Serverless** tab:
 - **Metrics adoption — AI notes** — Agent Builder markdown for Datadog-shaped metrics adoption (also on **Service overview** when attach succeeds)
 - **Observability → Rules** — four workshop rules (imported **disabled**; enable in the UI to test)
 
-Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes**, or:
+Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes**, or in **Terminal**:
 
 ```bash
+source ~/.bashrc
+cd /root/workshop && ./scripts/sync_workshop_from_git.sh
+python3 /root/workshop/scripts/deploy_workshop_workflows.py
 python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --platform datadog --seed-now
 ```
 

@@ -10,9 +10,15 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-REF="${WORKSHOP_GIT_REF:-main}"
+REF="${WORKSHOP_GIT_REF:-metrics-adoption-workshop}"
 echo "Updating from origin ($REF)..."
 git fetch --depth 1 origin "$REF" 2>/dev/null || git fetch origin "$REF"
+# Fall back to main if the feature branch is unavailable.
+if ! git rev-parse --verify "origin/$REF" >/dev/null 2>&1; then
+  REF=main
+  echo "Falling back to origin/$REF ..."
+  git fetch --depth 1 origin "$REF" 2>/dev/null || git fetch origin "$REF"
+fi
 git reset --hard "origin/$REF"
 
 # If mig-to-kbn is a submodule, pull its commit after the parent reset (shallow-friendly).

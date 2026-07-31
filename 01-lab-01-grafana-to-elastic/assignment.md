@@ -101,11 +101,17 @@ Open the **Elastic Serverless** tab:
 - **Metrics adoption — AI notes** — Agent Builder markdown for PromQL/Grafana-shaped metrics adoption (also appended to **Traffic overview** when attach succeeds)
 - **Observability → Rules** — two workshop rules (imported **disabled**; enable in the UI to test)
 
-Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes** (manual run), or:
+Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes** (manual run), or in **Terminal**:
 
 ```bash
+source ~/.bashrc
+# Sync latest workshop files if Workflows is still empty / scripts missing:
+cd /root/workshop && ./scripts/sync_workshop_from_git.sh
+python3 /root/workshop/scripts/deploy_workshop_workflows.py
 python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --platform grafana --seed-now
 ```
+
+Then open **Workflows** and run **Metrics adoption — AI dashboard notes**, or open **Metrics adoption — AI notes** under Dashboards.
 
 ## Troubleshooting
 
