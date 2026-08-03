@@ -19,7 +19,7 @@ Ten dashboards under `assets/datadog/dashboards/`; four `monitor-*.json` → `bu
 
 - **Laptop + Cursor:** clone repo, paste VM **`export`** lines from **`grep … ~/.bashrc`**, run the same migrate script or raw **`datadog-migrate`** (see **`scripts/migrate_datadog_dashboards_to_serverless.sh`**).
 - **Legacy draft JSON:** **`datadog_dashboard_to_elastic.py`** + **`publish_grafana_drafts_kibana.py`** for `*-elastic-draft.json` flows.
-- **Integration dashboards:** **`migrate_datadog_integrations_to_serverless.sh`** (eight integrations-core exports).
+- **Integration dashboards:** **`migrate_datadog_integrations_to_serverless.sh`** (eight integrations-core exports + sample OTLP metrics via **`start_workshop_integrations_otel.sh`**).
 - **Re-seed AI notes only:** **`python3 scripts/ensure_ai_recommendation_panels.py --platform datadog --seed-now`**
 
 **Invite copy:** **`docs/invite.md`**. **Agent Skills:** **`kibana-dashboards`**, **`agent-skills/workshop-datadog-dashboards-to-elastic/SKILL.md`**, **`workshop-datadog-to-elastic-alerts`**.

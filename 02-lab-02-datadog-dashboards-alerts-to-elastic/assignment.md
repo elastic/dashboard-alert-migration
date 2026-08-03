@@ -136,8 +136,16 @@ In **Elastic Serverless**:
 
 ## Optional
 
+Migrate **integrations-core** boards (NGINX, Postgres, RabbitMQ, …) and start sample OTLP metrics:
+
 ```bash
 bash /root/workshop/scripts/migrate_datadog_integrations_to_serverless.sh
+```
+
+Wait ~1 minute, then open e.g. **NGINX - Overview** / **Postgres - Metrics**. Sample-only restart:
+
+```bash
+bash /root/workshop/scripts/start_workshop_integrations_otel.sh
 ```
 
 ## Done
