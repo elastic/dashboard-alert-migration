@@ -134,7 +134,7 @@
         "title": "Servlet hits",
         "requests": [
           {
-            "q": "sum:trace.servlet.request.hits{*} by {service}.as_count()",
+            "q": "avg:trace.servlet.request.hits{*} by {service}",
             "display_type": "line"
           }
         ]

@@ -229,6 +229,32 @@ def _run_worker(spec: dict[str, str]) -> int:
         unit="ms",
         description="Datadog trace.dns.lookup.duration → dd_trace_dns_lookup_duration (gauge)",
     )
+    # Extra APM companions used on Service overview / Latency / Apdex boards.
+    trace_http_client_dur = meter.create_gauge(
+        "trace_http_client_duration",
+        unit="ms",
+        description="Datadog trace.http.client.duration → trace_http_client_duration",
+    )
+    trace_servlet_hits = meter.create_gauge(
+        "trace_servlet_request_hits",
+        unit="1",
+        description="Datadog trace.servlet.request.hits → trace_servlet_request_hits (gauge)",
+    )
+    trace_servlet_dur = meter.create_gauge(
+        "trace_servlet_request_duration",
+        unit="ms",
+        description="Datadog trace.servlet.request.duration → trace_servlet_request_duration",
+    )
+    trace_grpc_dur = meter.create_gauge(
+        "trace_grpc_client_duration",
+        unit="ms",
+        description="Datadog trace.grpc.client.duration → trace_grpc_client_duration",
+    )
+    trace_postgres_dur = meter.create_gauge(
+        "trace_postgres_query_duration",
+        unit="ms",
+        description="Datadog trace.postgres.query.duration → trace_postgres_query_duration",
+    )
     # Datadog ``.as_rate()`` panels → mig often emits MAX/MIN; emit as gauges for workshop smoke.
     def ctx_switches_obs(_options: object):
         yield Observation(float(rng.randint(1_200, 48_000)))
@@ -571,10 +597,10 @@ def _run_worker(spec: dict[str, str]) -> int:
         callbacks=[swap_pct_free_obs],
     )
 
-    mem_page_faults = meter.create_counter(
+    mem_page_faults = meter.create_gauge(
         "system_mem_page_faults",
         unit="1",
-        description="system.mem.page_faults → system_mem_page_faults",
+        description="system.mem.page_faults → system_mem_page_faults (gauge rate proxy)",
     )
 
     def disk_io_obs(_options: object):
@@ -671,9 +697,44 @@ def _run_worker(spec: dict[str, str]) -> int:
 
     def apdex_obs(_options: object):
         phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
-        yield Observation(max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase))))
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        yield Observation(score)
+
+    def apdex_satisfied_obs(_options: object):
+        phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        # Count proxies so avg:app.apdex.satisfied panels light up (not counter_long).
+        yield Observation(float(max(1, int(40 * score + rng.uniform(-2, 2)))))
+
+    def apdex_tolerating_obs(_options: object):
+        phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        yield Observation(float(max(0, int(18 * (1.0 - score) + rng.uniform(0, 3)))))
+
+    def apdex_frustrated_obs(_options: object):
+        phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        yield Observation(float(max(0, int(12 * (1.0 - score) + rng.uniform(0, 2)))))
 
     meter.create_observable_gauge("app_apdex_score", unit="1", description="app.apdex.score proxy", callbacks=[apdex_obs])
+    meter.create_observable_gauge(
+        "app_apdex_satisfied",
+        unit="1",
+        description="Datadog app.apdex.satisfied → app_apdex_satisfied (gauge count proxy)",
+        callbacks=[apdex_satisfied_obs],
+    )
+    meter.create_observable_gauge(
+        "app_apdex_tolerating",
+        unit="1",
+        description="Datadog app.apdex.tolerating → app_apdex_tolerating (gauge count proxy)",
+        callbacks=[apdex_tolerating_obs],
+    )
+    meter.create_observable_gauge(
+        "app_apdex_frustrated",
+        unit="1",
+        description="Datadog app.apdex.frustrated → app_apdex_frustrated (gauge count proxy)",
+        callbacks=[apdex_frustrated_obs],
+    )
 
     def container_cpu_obs(_options: object):
         yield Observation(
@@ -691,10 +752,10 @@ def _run_worker(spec: dict[str, str]) -> int:
         description="container.cpu.usage proxy (by container.name)",
         callbacks=[container_cpu_obs],
     )
-    container_throttled = meter.create_counter(
+    container_throttled = meter.create_gauge(
         "container_cpu_throttled",
         unit="1",
-        description="container.cpu.throttled proxy",
+        description="container.cpu.throttled proxy (gauge)",
     )
 
     def container_mem_usage_obs(_options: object):
@@ -867,18 +928,23 @@ def _run_worker(spec: dict[str, str]) -> int:
             {"service.name": service, "http.route": route},
         )
         trace_dns.set(round(rng.uniform(0.5, 80.0), 2), {"service.name": service})
+        trace_http_client_dur.set(round(rng.uniform(8.0, 160.0), 2), {"service.name": service})
+        trace_servlet_hits.set(float(burst), {"service.name": service})
+        trace_servlet_dur.set(round(rng.uniform(5.0, 90.0), 2), {"service.name": service})
+        trace_grpc_dur.set(round(rng.uniform(4.0, 120.0), 2), {"service.name": service})
+        trace_postgres_dur.set(round(rng.uniform(3.0, 75.0), 2), {"service.name": service})
 
         for _ in range(burst):
             duration_s = round(rng.uniform(0.006, 0.42), 4)
             duration_hist.record(duration_s, base_attrs)
             req_counter.add(1, base_attrs)
 
-        mem_page_faults.add(rng.randint(50, 4_000), {})
+        mem_page_faults.set(float(rng.randint(50, 4_000)), {})
 
         # Net/disk/container rate proxies are observable gauges (callbacks above).
 
-        container_throttled.add(rng.randint(0, 4), {"container.name": f"{service}-main"})
-        container_throttled.add(rng.randint(0, 2), {"container.name": f"{service}-sidecar"})
+        container_throttled.set(float(rng.randint(0, 4)), {"container.name": f"{service}-main"})
+        container_throttled.set(float(rng.randint(0, 2)), {"container.name": f"{service}-sidecar"})
 
         if status >= 500 or rng.random() < err_prob:
             reason = (

@@ -26,7 +26,7 @@
         "title": "Satisfied count",
         "requests": [
           {
-            "q": "sum:app.apdex.satisfied{*} by {service}.as_count()",
+            "q": "avg:app.apdex.satisfied{*} by {service}",
             "display_type": "line"
           }
         ]
@@ -44,7 +44,7 @@
         "title": "Tolerating",
         "requests": [
           {
-            "q": "sum:app.apdex.tolerating{*} by {service}.as_count()",
+            "q": "avg:app.apdex.tolerating{*} by {service}",
             "display_type": "line"
           }
         ]
@@ -62,7 +62,7 @@
         "title": "Frustrated",
         "requests": [
           {
-            "q": "sum:app.apdex.frustrated{*} by {service}.as_count()",
+            "q": "avg:app.apdex.frustrated{*} by {service}",
             "display_type": "line"
           }
         ]
