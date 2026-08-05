@@ -693,6 +693,31 @@ def _run_worker(spec: dict[str, str]) -> int:
         description="container.cpu.throttled proxy",
     )
 
+    def container_mem_usage_obs(_options: object):
+        # Datadog container.memory.usage → container_memory_usage (Container CPU throttle board).
+        phase = (time.time() - t0) / 55.0 + (seed % 7) * 0.11
+        for cname, base in ((f"{service}-main", 512e6), (f"{service}-sidecar", 128e6)):
+            v = base + base * 0.35 * (0.5 + 0.5 * math.sin(phase)) + rng.uniform(-8e6, 8e6)
+            yield Observation(max(32e6, v), {"container.name": cname})
+
+    def container_mem_limit_obs(_options: object):
+        # Datadog container.memory.limit → container_memory_limit.
+        yield Observation(1024e6, {"container.name": f"{service}-main"})
+        yield Observation(256e6, {"container.name": f"{service}-sidecar"})
+
+    meter.create_observable_gauge(
+        "container_memory_usage",
+        unit="By",
+        description="Datadog container.memory.usage → container_memory_usage",
+        callbacks=[container_mem_usage_obs],
+    )
+    meter.create_observable_gauge(
+        "container_memory_limit",
+        unit="By",
+        description="Datadog container.memory.limit → container_memory_limit",
+        callbacks=[container_mem_limit_obs],
+    )
+
     def container_net_rcvd_obs(_options: object):
         for cname in (f"{service}-main", f"{service}-sidecar"):
             yield Observation(float(rng.uniform(8_000, 420_000)), {"container.name": cname})
