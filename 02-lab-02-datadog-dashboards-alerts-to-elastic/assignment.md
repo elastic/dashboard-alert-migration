@@ -31,6 +31,32 @@ notes:
     ```
 - type: text
   contents: |
+    ## Agenda — five adoption themes
+
+    <div style="display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0;">
+    <div style="border-left:4px solid #60a5fa;padding:10px 14px;background:#0f172a;border-radius:0 10px 10px 0;">
+    <b style="color:#93c5fd;">1. Metrics on Elastic</b><br/>
+    <span style="color:#cbd5e1;font-size:0.9rem;">Same OTLP path as Lab 1 — live <code>metrics-*</code> with logs/traces.</span>
+    </div>
+    <div style="border-left:4px solid #34d399;padding:10px 14px;background:#0f172a;border-radius:0 10px 10px 0;">
+    <b style="color:#6ee7b7;">2. Prometheus / PromQL</b><br/>
+    <span style="color:#cbd5e1;font-size:0.9rem;">Covered in Lab 1 — Grafana / PromQL boards on Kibana.</span>
+    </div>
+    <div style="border-left:4px solid #fbbf24;padding:10px 14px;background:#0f172a;border-radius:0 10px 10px 0;">
+    <b style="color:#fcd34d;">3. Datadog metric IP</b><br/>
+    <span style="color:#cbd5e1;font-size:0.9rem;"><b>This lab:</b> dashboards + monitors → Kibana boards and <b>alert drafts</b> (review before enable).</span>
+    </div>
+    <div style="border-left:4px solid #a78bfa;padding:10px 14px;background:#0f172a;border-radius:0 10px 10px 0;">
+    <b style="color:#c4b5fd;">4. Platform depth</b><br/>
+    <span style="color:#cbd5e1;font-size:0.9rem;">PromQL where you already live; ES|QL + columnar metrics where Elastic wins.</span>
+    </div>
+    <div style="border-left:4px solid #f472b6;padding:10px 14px;background:#0f172a;border-radius:0 10px 10px 0;">
+    <b style="color:#f9a8d4;">5. Agent Builder</b><br/>
+    <span style="color:#cbd5e1;font-size:0.9rem;">AI notes on live Datadog-migrated boards — what to validate next.</span>
+    </div>
+    </div>
+- type: text
+  contents: |
     ## Why migrate Grafana & Datadog dashboards and alerts?
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0;">
@@ -40,7 +66,7 @@ notes:
     </div>
     <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;">
     <div style="font-size:1.75rem;font-weight:800;color:#60a5fa;">IP</div>
-    <div style="font-size:0.85rem;margin-top:6px;color:#e2e8f0;"><b>Keep what you built</b><br/>PromQL panels & monitors are assets — migrate intent, don’t redraw every chart.</div>
+    <div style="font-size:0.85rem;margin-top:6px;color:#e2e8f0;"><b>Keep what you built</b><br/>PromQL panels &amp; Datadog monitors are assets — migrate intent, don’t redraw every chart.</div>
     </div>
     <div style="border:1px solid #334155;border-radius:12px;padding:14px;background:#0f172a;">
     <div style="font-size:1.75rem;font-weight:800;color:#60a5fa;">Gov</div>
@@ -81,9 +107,17 @@ notes:
   contents: |
     ## This lab
 
-    Accelerate metrics adoption: **10** Datadog-shaped metric dashboards (**`datadog-migrate`**) + **4** monitors → Kibana dashboards and alert **drafts**. Run **one command** in **Terminal** when the sandbox is ready.
+    **Lab 2 — Datadog metric IP → Kibana** (dashboards + monitors as **drafts**).
 
-    **Live OTLP:** **`./scripts/send_datadog_otel.sh`** (or **`tools/datadog_otel_to_elastic.py`**) — same pipeline as Lab 1.
+    | Theme | What you prove |
+    | --- | --- |
+    | Metrics on Elastic | Same OTLP → **`metrics-*`** path as Lab 1 |
+    | Datadog metric IP | **10** boards + **4** monitors via **`datadog-migrate`** — keep IP, don’t redraw |
+    | Governance | Rules imported **disabled** — review queries before enable |
+    | Platform depth | Migrated panels on Elastic metrics (ES|QL / Lens) |
+    | Agent Builder | **AI notes** (`workshop-ai-rec-datadog`) on each board |
+
+    Run **one command** in **Terminal** when the sandbox is ready.
 
     **Next slide:** mini-game while Lab 2 environments load.
 - type: text
@@ -105,7 +139,7 @@ tabs:
   title: Elastic Serverless
   type: service
   hostname: es3-api
-  path: /
+  path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
   port: 8080
   custom_request_headers:
   - key: Content-Security-Policy
@@ -121,7 +155,14 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-**Lab goal:** move **10** Datadog-shaped metric dashboards **+ 4 monitors** onto Elastic with **one command** — Elastic’s published migration path (`datadog-migrate`), as Kibana dashboards and alert **drafts**.
+**Lab goal:** accelerate **Datadog metric IP** onto Elastic — move **10** metric dashboards **+ 4 monitors** with **one command** (`datadog-migrate`) into Kibana boards and alert **drafts** (review before enable). Same **OTLP → `metrics-*`** plane as Lab 1; **Agent Builder** notes guide what to validate next.
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:12px 0;">
+<div style="border:1px solid #cbd5e1;border-radius:8px;padding:8px;background:#f8fafc;font-size:0.75rem;text-align:center;"><b>OTLP → metrics-*</b><br/>same path as Lab 1</div>
+<div style="border:1px solid #fde68a;border-radius:8px;padding:8px;background:#fffbeb;font-size:0.75rem;text-align:center;"><b>Datadog IP</b><br/>boards + monitors</div>
+<div style="border:1px solid #ddd6fe;border-radius:8px;padding:8px;background:#f5f3ff;font-size:0.75rem;text-align:center;"><b>Draft → approve</b><br/>rules stay disabled</div>
+<div style="border:1px solid #fbcfe8;border-radius:8px;padding:8px;background:#fdf2f8;font-size:0.75rem;text-align:center;"><b>Agent Builder</b><br/>AI notes on live boards</div>
+</div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:14px 0;align-items:stretch;">
 <div style="border:1px solid #cbd5e1;border-radius:10px;padding:12px;background:#f8fafc;text-align:center;">
@@ -137,7 +178,7 @@ enhanced_loading: null
 <div style="border:1px solid #86efac;border-radius:10px;padding:12px;background:#f0fdf4;text-align:center;">
 <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;color:#64748b;">Result</div>
 <div style="font-size:1.1rem;font-weight:700;margin-top:4px;color:#166534;">Kibana</div>
-<div style="font-size:0.8rem;color:#475569;margin-top:2px;">Dashboards · rules · AI notes<br/>on live <code>metrics-*</code></div>
+<div style="font-size:0.8rem;color:#475569;margin-top:2px;">Dashboards · drafts · AI notes<br/>on live <code>metrics-*</code></div>
 </div>
 </div>
 
@@ -145,19 +186,19 @@ enhanced_loading: null
 bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh
 ```
 
-Expect a few minutes. The script confirms OTLP is flowing, runs **`datadog-migrate --upload`**, publishes **4** monitor drafts (**disabled**), and seeds **AI notes** on each board.
+Expect a few minutes. The script confirms **OTLP** → **`metrics-*`**, runs **`datadog-migrate --upload`**, publishes **4** monitor drafts (**disabled** — review before enable), and seeds **Agent Builder AI notes** on each board.
 
 ## Verify
 
 Open the **Elastic Serverless** tab:
 
-1. **Dashboards** — e.g. **Service overview**; charts use **`metrics-*`**
-2. Scroll to the **bottom** for **AI notes** (`workshop-ai-rec-datadog`)
+1. **Dashboards** — e.g. **Service overview**; charts use live **`metrics-*`**
+2. Scroll to the **bottom** for **AI notes** (`workshop-ai-rec-datadog`) — what to validate next
 3. **Observability → Rules** — **four** workshop rules (**disabled** until you enable them)
 
 ## Optional
 
-Migrate **integrations-core** boards (NGINX, Postgres, RabbitMQ, …) and start sample OTLP metrics:
+Migrate **integrations-core** boards (NGINX, Postgres, RabbitMQ, …) and start sample OTLP metrics — more Datadog metric IP on the same Elastic plane:
 
 ```bash
 bash /root/workshop/scripts/migrate_datadog_integrations_to_serverless.sh

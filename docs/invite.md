@@ -47,11 +47,11 @@ Elastic Observability workshop team
 
 Use after the live workshop (Amena-style follow-up):
 
-1. **Metrics on Elastic** — OTLP ingest and live `metrics-*` as the path to standardize metrics with logs/traces  
-2. **Prometheus / PromQL continuity** — bring PromQL-oriented dashboards onto Kibana quickly (reviewable automation, not a full redraw)  
-3. **Best-in-class metrics platform** — native PromQL where it fits, ES|QL + **columnar metrics engine** where Elastic wins on query/storage  
-4. **AI-assisted adoption** — Agent Builder notes on live dashboards (what to validate next)  
-5. **Governance** — monitors → Kibana rule drafts (disabled until you approve)  
+1. **Metrics on Elastic** — OTLP → live `metrics-*` alongside logs/traces  
+2. **Prometheus / PromQL** — PromQL-oriented (Grafana) dashboards onto Kibana without redrawing every panel  
+3. **Datadog metric IP** — dashboards + monitors → Kibana boards and alert drafts (review before enable)  
+4. **Platform depth** — PromQL where you already live; ES|QL + columnar metrics where Elastic wins  
+5. **Agent Builder** — AI notes on live dashboards for what to validate next  
 6. Live Q&A / session recording (as available)
 
 ---

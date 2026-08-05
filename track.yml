@@ -1,12 +1,15 @@
 slug: elastic-serverless-migration-lab
 id: hs7ogfqktp5m
 title: Metrics adoption on Elastic Observability
-teaser: Adopt metrics on Elastic Observability Serverless—OTLP ingest, dashboards,
-  and alerts (including PromQL / Datadog metric assets).
+teaser: Metrics on Elastic—OTLP to live metrics-*, PromQL boards, Datadog metric IP,
+  ES|QL/columnar depth, and Agent Builder notes.
 description: |
-  Metrics adoption workshop. Live OTLP → mOTLP, Kibana on :8080. Labs accelerate
-  adoption with grafana-migrate / datadog-migrate (metric dashboards & monitors → Kibana).
-  Engine: elastic/observability-migration-platform. Invite copy: docs/invite.md.
+  Hands-on metrics adoption for existing Elastic customers. Topics: (1) OTLP → live
+  metrics-* alongside logs/traces; (2) Prometheus/PromQL Grafana boards → Kibana without
+  redrawing every panel; (3) Datadog dashboards + monitors → Kibana boards and alert
+  drafts (review before enable); (4) PromQL where you already live, ES|QL + columnar
+  metrics where Elastic wins; (5) Agent Builder AI notes on live dashboards. Engine:
+  elastic/observability-migration-platform. Invite: docs/invite.md.
 icon: https://cdn.instruqt.com/assets/templates/kubernetes.png
 tags:
 - obs-migrate
