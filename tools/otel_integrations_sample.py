@@ -155,7 +155,7 @@ def main() -> int:
         def _cb(_options: object):
             now = time.time() - t0
             # Multi-series for common group-bys on integration boards
-            if instr.startswith("rabbitmq_queue_") or instr.startswith("rabbitmq_queue.") or "rabbitmq_queue_" in instr:
+            if instr.startswith("rabbitmq_queue_"):
                 for node in rabbit_nodes:
                     for q in queues:
                         yield Observation(
