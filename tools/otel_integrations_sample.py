@@ -9,6 +9,9 @@ MySQL / Apache / Docker / Kubernetes boards can paint without real agents.
 Redis Overview needs extra dimensions the Datadog board groups on:
 ``command`` / ``name`` (slowlog panels) and ``key`` (key-length + dashboard filter).
 
+RabbitMQ Overview (OpenMetrics) groups Node Status by ``rabbitmq_node`` and filters
+``queue`` / ``rabbitmq_conn_state`` — those attributes are set on the matching instruments.
+
 Usage (workshop VM)::
 
   source ~/.bashrc
@@ -136,6 +139,8 @@ def main() -> int:
 
     hosts = ("workshop-integrations-01", "workshop-integrations-02")
     queues = ("orders", "notifications", "billing")
+    rabbit_nodes = ("rabbit@workshop-rmq-1", "rabbit@workshop-rmq-2")
+    rabbit_conn_states = ("running", "blocked", "blocking")
     pods = ("nginx-7f8d9", "postgres-0", "redis-master-0", "rabbitmq-0")
     redis_commands = (
         ("GET", "user:session"),
@@ -150,11 +155,43 @@ def main() -> int:
         def _cb(_options: object):
             now = time.time() - t0
             # Multi-series for common group-bys on integration boards
-            if instr.startswith("rabbitmq_queue_"):
-                for q in queues:
+            if instr.startswith("rabbitmq_queue_") or instr.startswith("rabbitmq_queue.") or "rabbitmq_queue_" in instr:
+                for node in rabbit_nodes:
+                    for q in queues:
+                        yield Observation(
+                            _value_for(instr, now + hash(q) % 7, rng),
+                            {
+                                "queue": q,
+                                "rabbitmq_queue": q,
+                                "rabbitmq_node": node,
+                                "host.name": hosts[0],
+                                "host": hosts[0],
+                            },
+                        )
+                return
+            if instr.startswith("rabbitmq_connection_") or instr.startswith("rabbitmq_channel_"):
+                for node in rabbit_nodes:
+                    for state in rabbit_conn_states:
+                        yield Observation(
+                            _value_for(instr, now + hash(state) % 5, rng),
+                            {
+                                "rabbitmq_node": node,
+                                "rabbitmq_conn_state": state,
+                                "host.name": hosts[0],
+                                "host": hosts[0],
+                            },
+                        )
+                return
+            if instr.startswith("rabbitmq_"):
+                # Node Status panels: by {rabbitmq_node}; filters use rabbitmq_node / queue prefixes.
+                for node in rabbit_nodes:
                     yield Observation(
-                        _value_for(instr, now, rng),
-                        {"queue": q, "host.name": hosts[0], "host": hosts[0]},
+                        _value_for(instr, now + hash(node) % 5, rng),
+                        {
+                            "rabbitmq_node": node,
+                            "host.name": hosts[0],
+                            "host": hosts[0],
+                        },
                     )
                 return
             if instr.startswith("kubernetes_") or instr.startswith("kubernetes_state_"):
