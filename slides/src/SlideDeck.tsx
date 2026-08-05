@@ -24,6 +24,9 @@ export type Slide = {
    * URL respects Vite `base` (GitHub Pages project path).
    */
   videoSrc?: string;
+  /** Optional source citation under the slide body */
+  sourceLabel?: string;
+  sourceUrl?: string;
 };
 
 const INSTRUQT_INVITE = "https://play.instruqt.com/elastic/invite/fmt96ftdm41w";
@@ -56,145 +59,254 @@ const SLIDES: Slide[] = [
   {
     title: "Workshop walkthrough",
     subtitle:
-      "Quick tour of the Instruqt lab — metrics adoption on Elastic Observability Serverless for existing customers.",
+      "Quick tour of the Instruqt lab — metrics adoption on Elastic Observability Serverless.",
     videoSrc: "dashboard-alert-migration.mp4",
   },
   {
     title: "Try the guided experience",
     subtitle:
-      "Adopt metrics in a browser sandbox: live OTLP → Kibana dashboards and alert drafts — no install required.",
+      "Browser sandbox: live OTLP → metrics-*, PromQL & Datadog boards on Kibana, alert drafts, Agent Builder notes — no install.",
     workshopUrl: INSTRUQT_INVITE,
     workshopLinkLabel: "Launch Elastic sandbox (Instruqt)",
   },
   {
-    title: "Why existing Elastic customers deepen metrics",
+    title: "Five themes of this workshop",
     subtitle:
-      "Logs and traces are often already on Elastic — metrics still live in parallel stacks. Adoption means one operations plane.",
-    bullets: [
-      "One managed stack for logs, metrics, and traces so SREs stop pivoting across siloed query languages and UIs.",
-      "OpenTelemetry-native ingest matches how platform teams already ship telemetry — including dual-publish while you expand coverage.",
-      "ES|QL and Lens give analysts one executable language across signals, with Kibana as the shared operations surface.",
-      "APIs and automation matter at enterprise scale: metric dashboards and alerting should be versionable and reviewable — not only UI clicks.",
-    ],
-  },
-  {
-    title: "What this workshop demonstrates",
-    subtitle:
-      "A credible metrics-adoption slice: OTLP ingest, reviewable Kibana content, and optional reuse of PromQL / Datadog metric assets.",
-    bullets: [
-      "A multi-service OTLP footprint — the same pattern customers use when standardizing on Elastic managed ingest for metrics.",
-      "Dozens of PromQL- and Datadog-shaped metric dashboards exercised end-to-end so you can stress-test classification, ES|QL, and owner review.",
-      "Alert artifacts travel the same automation spine as dashboards — drafts first, then human approval before production enforcement.",
-      "Everything you see is reproducible from source exports + automation — the same ingredients you would pipeline internally.",
-    ],
-  },
-  {
-    title: "Elastic by the numbers",
-    subtitle:
-      "Directional benefits for metrics adoption business cases — timelines depend on panel complexity, security reviews, and cutover windows.",
+      "Existing Elastic customers — deepen metrics on the same plane as logs and traces.",
     statCards: [
       {
-        figure: "4–10×",
-        title: "Less manual dashboard work",
+        figure: "1",
+        title: "Metrics on Elastic",
         caption:
-          "Planning teams often see this range when bulk conversion plus Dashboards API publish replaces hand-rebuilding every visualization from scratch.",
-      },
-      {
-        figure: "30",
-        title: "Metric dashboards in this journey",
-        caption:
-          "Twenty PromQL/Grafana-shaped and ten Datadog-shaped boards — enough volume to prove classification, not just a happy-path demo.",
+          "OTLP → managed ingest → live metrics-* alongside logs-* and traces-* — one Observability plane.",
       },
       {
         figure: "2",
-        title: "Controlled phases",
+        title: "Prometheus / PromQL",
         caption:
-          "Phase 1: preserve source metric intent in structured drafts. Phase 2: publish executable ES|QL in Lens via API.",
+          "Bring PromQL-oriented (Grafana) dashboards onto Kibana without redrawing every panel.",
       },
       {
-        figure: "Hours",
-        title: "Time to a reviewable wave",
+        figure: "3",
+        title: "Datadog metric IP",
         caption:
-          "Many waves that once consumed analyst-days compress to scripted runs, validation, and SME sign-off — then rerun as you tune mappings.",
-      },
-      {
-        figure: "1",
-        title: "Unified ingest plane",
-        caption:
-          "One OTLP-oriented path for logs, metrics, and traces — fewer parallel integrations while you expand metrics coverage.",
+          "Dashboards + monitors → Kibana boards and alert drafts — review before you enable.",
       },
       {
         figure: "4",
-        title: "Sample alert definitions",
+        title: "Platform depth",
         caption:
-          "Representative monitor-style JSON becomes Kibana rule drafts — the same governance model as adopted dashboards.",
+          "PromQL where you already live; ES|QL + columnar metrics where Elastic wins on query and storage.",
+      },
+      {
+        figure: "5",
+        title: "Agent Builder",
+        caption:
+          "AI notes on live dashboards — what to validate next after migrate, not slideware screenshots.",
+      },
+      {
+        figure: "Labs",
+        title: "How you practice",
+        caption:
+          "Lab 1: PromQL / Grafana → Kibana. Lab 2: Datadog boards + monitors → drafts. Both on live OTLP.",
       },
     ],
   },
   {
-    title: "Your telemetry, Elastic’s managed pipeline",
+    title: "Why migrate Grafana & Datadog boards?",
     subtitle:
-      "Elastic Observability Serverless speaks OTLP fluently — the open standard for metrics (and logs/traces) adoption.",
+      "Dashboards and alerts are operational IP. Leaving them stranded means dual tooling, dual on-call, and slower incident response.",
+    statCards: [
+      {
+        figure: "1",
+        title: "Operations plane",
+        caption:
+          "Stop pivoting between Grafana/Datadog UIs and Kibana for the same incident — metrics, logs, and traces in one place.",
+      },
+      {
+        figure: "IP",
+        title: "Keep what you built",
+        caption:
+          "Years of PromQL panels and Datadog monitors are assets. Migration preserves intent instead of rebuilding every chart by hand.",
+      },
+      {
+        figure: "Gov",
+        title: "Draft → approve → enforce",
+        caption:
+          "Alert definitions become Kibana rule drafts so SREs review thresholds and connectors before go-live.",
+      },
+      {
+        figure: "4–10×",
+        title: "Less rebuild work",
+        caption:
+          "Bulk conversion + Dashboards API publish compresses analyst-days of hand recreation into scripted, reviewable waves.",
+      },
+      {
+        figure: "CI",
+        title: "Repeatable cutover",
+        caption:
+          "Exports + automation fit the same IaC discipline you already use — rerun, diff, and promote across environments.",
+      },
+      {
+        figure: "OTLP",
+        title: "Open ingest path",
+        caption:
+          "Standardize on OpenTelemetry while dual-publishing; migrate the UI/alert layer when the data plane is ready.",
+      },
+    ],
+  },
+  {
+    title: "Elastic Metrics: columnar engine",
+    subtitle:
+      "Platform depth — store OTel metrics next to logs and traces with no compromise on query or storage.",
+    statCards: [
+      {
+        figure: "30×",
+        title: "Faster queries vs Prometheus",
+        caption:
+          "Up to 30× better query performance vs Prometheus, Mimir, and ClickHouse on competitive benchmarks.",
+      },
+      {
+        figure: "3.75 B",
+        title: "Per OTel data point",
+        caption:
+          "Storage down from ~25 bytes/point a year ago — up to 6.6× more efficient TSDS packing for high-cardinality metrics.",
+      },
+      {
+        figure: "2.5×",
+        title: "Better storage efficiency",
+        caption:
+          "Exceeds dedicated metrics stores on footprint while keeping Elasticsearch’s unified data model.",
+      },
+      {
+        figure: "50%",
+        title: "Higher indexing throughput",
+        caption:
+          "OTel/protobuf entrypoints + doc-value skippers cut CPU and I/O on the hot ingest path.",
+      },
+      {
+        figure: "160×",
+        title: "Query latency wins",
+        caption:
+          "Vectorized ES|QL time-series compute (TS + RATE + TBUCKET) vs prior TSDS aggregation paths.",
+      },
+      {
+        figure: "ES|QL",
+        title: "Beyond PromQL alone",
+        caption:
+          "PromQL where you already live; ES|QL joins metrics with logs and traces — what siloed PromQL stacks cannot do.",
+      },
+    ],
+    sourceLabel: "Elasticsearch Labs — columnar metrics engine",
+    sourceUrl:
+      "https://www.elastic.co/search-labs/blog/elasticsearch-columnar-metrics-engine-30x-faster-prometheus",
+  },
+  {
+    title: "Metrics on Elastic — live OTLP",
+    subtitle:
+      "Theme 1: the same open ingest path customers use when standardizing metrics on Observability Serverless.",
     bullets: [
-      "Collectors and agents forward gRPC/HTTP OTLP; Elastic managed ingest terminates with sensible defaults for production cardinality.",
-      "Prometheus-compatible scrape still fits sidecars and service meshes — Elastic becomes the metrics sink, not another siloed store.",
-      "Scoped API keys and Org security align with how enterprises govern cross-team observability projects.",
-      "In the guided sandbox, live telemetry confirms Lens and Discover against real series — not screenshots.",
+      "Collectors and agents forward OTLP; Elastic managed OTLP (mOTLP) lands series in metrics-* next to logs-* and traces-*.",
+      "Prometheus scrape still fits sidecars and meshes — Elastic becomes the metrics sink, not another siloed store.",
+      "In the sandbox, Alloy + emitters confirm Lens and Discover against real series — not screenshots.",
+      "Scoped API keys and Org security match how enterprises govern cross-team observability projects.",
+    ],
+  },
+  {
+    title: "Prometheus / PromQL → Kibana (Lab 1)",
+    subtitle:
+      "Theme 2: bring PromQL-oriented Grafana dashboards onto Kibana without redrawing every panel.",
+    bullets: [
+      "One command runs grafana-migrate: 20 PromQL/Grafana-shaped boards + workshop alert drafts onto live metrics-*.",
+      "PromQL intent is preserved in the migration path; Lens / ES|QL is what executes against Elastic’s metrics store.",
+      "Operating model: platform SREs run conversion; application owners validate visuals against golden datasets.",
+      "Agent Builder AI notes land on each board so owners know what to validate next — not a static “what/why” strip.",
+    ],
+  },
+  {
+    title: "Datadog metric IP → Kibana (Lab 2)",
+    subtitle:
+      "Theme 3: dashboards and monitors become Kibana boards and alert drafts — review before enable.",
+    bullets: [
+      "One command runs datadog-migrate: 10 metric dashboards + 4 monitors → Kibana with the same OTLP metrics plane.",
+      "Monitors surface as disabled Kibana rule drafts — SecOps and SREs approve thresholds before enforcement.",
+      "Tag-heavy APM and host maps align with OTLP resource attributes already landing in Elastic.",
+      "Optional integrations-core boards (NGINX, Postgres, Redis, RabbitMQ, …) extend the same Datadog IP story.",
+    ],
+  },
+  {
+    title: "Agent Builder on live boards",
+    subtitle:
+      "Theme 5: AI notes attached to migrated dashboards — adoption guidance grounded in what you just published.",
+    bullets: [
+      "After migrate, each Grafana/Datadog board gets an Agent Builder markdown strip (workshop-ai-rec-*).",
+      "Notes focus on what to validate next: series freshness, field mappings, draft rules, and owner sign-off.",
+      "A workshop workflow can refresh recommendations — same pattern as production Agent Builder + Workflows.",
+      "Pair with Lab verify steps: open a board, scroll to AI notes, then check Observability → Rules (still disabled).",
     ],
   },
   {
     title: "A deliberate two-stage adoption path",
     subtitle:
-      "Reduce risk: separate “capture metric intent” from “publish executable analytics” so auditors and SREs stay aligned.",
+      "Reduce risk: separate “capture metric intent” from “publish executable analytics.”",
     bullets: [
-      "Stage 1 — Ingest source-of-truth exports (Grafana JSON, Datadog dashboards/monitors) and emit Elastic-oriented drafts with traceable metadata.",
-      "Stage 2 — Publish Lens panels and rules through Kibana APIs, with ES|QL grounded in your actual indices and naming conventions.",
-      "Original PromQL and Datadog queries remain referenced for transparency — they are not silently reinterpreted inside Elasticsearch.",
-      "Rerun, diff, and promote the same assets through dev → staging → prod — matching how mature platform teams ship change.",
+      "Stage 1 — Ingest Grafana/Datadog exports and emit Elastic-oriented drafts with traceable metadata.",
+      "Stage 2 — Publish Lens panels and rules through Kibana APIs, with ES|QL grounded in your indices.",
+      "Original PromQL and Datadog queries remain referenced for audit — they are not silently reinterpreted.",
+      "Rerun, diff, and promote the same assets through dev → staging → prod.",
     ],
   },
   {
-    title: "From familiar metric signals to Lens charts",
+    title: "Elastic by the numbers",
     subtitle:
-      "Automation classifies themes SREs already watch — CPU, latency, HTTP health, Kubernetes signals — then maps them to durable ES|QL.",
-    bullets: [
-      "Pattern recognition groups panels so HTTP saturation, golden signals, and infrastructure proxies land in the right Lens templates.",
-      "Time bucketing follows your duration policy so charts honor SLO windows instead of arbitrary fixed buckets.",
-      "Breakdowns favor dimensions you already standardized — for example service.name — so boards stay comparable week over week.",
-      "Edge cases become explicit in documentation panels: humans refine ES|QL where automation should not guess.",
-    ],
-  },
-  {
-    title: "If you already keep PromQL / Grafana metric boards",
-    subtitle:
-      "Treat those exports as adoption accelerators — preserve metric dashboard IP while Elastic becomes the runtime.",
-    bullets: [
-      "Bulk dashboard JSON: PromQL stays documented while Lens runs ES|QL against your Elastic metrics plane.",
-      "Kubernetes-hosted Grafana with Elasticsearch datasources can pivot through the same publishing APIs your platform team already automates.",
-      "Operating model: platform SREs run conversion and publish jobs; application owners validate visuals against golden datasets.",
-      "Hands-on sandbox mirrors scripted paths your services team can lift into CI or internal runbooks.",
-    ],
-  },
-  {
-    title: "If you already keep Datadog metric boards & monitors",
-    subtitle:
-      "Dashboard JSON and monitor definitions are assets — bring them into Elastic with the same governance you use for IaC.",
-    bullets: [
-      "Timeseries, top lists, and query widgets become Lens panels with Datadog q captured for audit — ES|QL is what runs at query time.",
-      "Monitors surface as Kibana alert drafts so SecOps and SREs approve thresholds, connectors, and runbooks before go-live.",
-      "Tag-heavy APM and host maps align with OTLP resource attributes already landing in Elastic — fewer semantic rewrites mid-adoption.",
-      "Dense dashboards prove the classification engine: many widgets per board is closer to customer reality than toy samples.",
+      "Directional benefits for metrics adoption business cases — timelines depend on complexity and cutover windows.",
+    statCards: [
+      {
+        figure: "4–10×",
+        title: "Less manual dashboard work",
+        caption:
+          "Bulk conversion plus Dashboards API publish vs hand-rebuilding every visualization from scratch.",
+      },
+      {
+        figure: "30",
+        title: "Metric dashboards in this journey",
+        caption:
+          "Twenty PromQL/Grafana-shaped and ten Datadog-shaped boards — enough volume to prove classification.",
+      },
+      {
+        figure: "2",
+        title: "Controlled phases",
+        caption:
+          "Phase 1: preserve source metric intent. Phase 2: publish executable ES|QL in Lens via API.",
+      },
+      {
+        figure: "Hours",
+        title: "Time to a reviewable wave",
+        caption:
+          "Scripted runs, validation, and SME sign-off — then rerun as you tune mappings.",
+      },
+      {
+        figure: "1",
+        title: "Unified ingest plane",
+        caption:
+          "One OTLP-oriented path for logs, metrics, and traces while you expand metrics coverage.",
+      },
+      {
+        figure: "4",
+        title: "Sample alert definitions",
+        caption:
+          "Monitor-style JSON becomes Kibana rule drafts — the same governance model as adopted dashboards.",
+      },
     ],
   },
   {
     title: "Your next 30 days of metrics adoption",
-    subtitle:
-      "Treat the sandbox as a rehearsal: the same checklist scales once connectivity and roles are ready.",
+    subtitle: "Treat the sandbox as a rehearsal — the same checklist scales once connectivity and roles are ready.",
     bullets: [
-      "Validate ingest: Confirm the metrics you care about appear in Elastic with the tags and services your teams expect.",
-      "Land three canonical metric dashboards and review drafts with owners before executives rely on them.",
-      "Exercise alerting: Wire notification destinations you already trust, run failure drills, then broaden enforcement.",
-      "Industrialize: Check automation into source control, parameterize environments, and schedule the next portfolio slice.",
+      "Metrics on Elastic — Confirm OTLP coverage: the series you care about appear in metrics-* with expected tags.",
+      "PromQL / Datadog IP — Land three canonical boards (Grafana and/or Datadog path) and review with owners.",
+      "Governance — Exercise two draft rules end-to-end before enabling enforcement.",
+      "Platform depth + Agent Builder — Use ES|QL where it wins; refresh Agent Builder notes as boards evolve.",
     ],
   },
 ];
@@ -331,6 +443,19 @@ export function SlideDeck() {
                   </li>
                 ))}
               </ul>
+            ) : null}
+            {slide.sourceUrl ? (
+              <p className="mx-auto mt-8 max-w-3xl font-mono text-xs text-zinc-500">
+                Source:{" "}
+                <a
+                  href={slide.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--primary)] underline decoration-white/20 underline-offset-2 hover:decoration-[var(--primary)]"
+                >
+                  {slide.sourceLabel ?? slide.sourceUrl}
+                </a>
+              </p>
             ) : null}
           </div>
         </main>
