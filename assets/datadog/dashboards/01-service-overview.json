@@ -26,7 +26,7 @@
         "title": "HTTP hits (count)",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*}.as_count()",
+            "q": "avg:trace.http.request.hits{*}",
             "display_type": "line"
           }
         ]
@@ -44,7 +44,7 @@
         "title": "HTTP errors",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*}.as_count()",
+            "q": "avg:trace.http.request.errors{*}",
             "display_type": "line"
           }
         ]
@@ -80,7 +80,7 @@
         "title": "Hits by resource",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*} by {resource_name}.as_count()",
+            "q": "avg:trace.http.request.hits{*} by {resource_name}",
             "display_type": "line"
           }
         ]

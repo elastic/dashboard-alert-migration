@@ -4,7 +4,10 @@ import pathlib
 FLEET_PATH = pathlib.Path(__file__).resolve().parents[1] / "tools" / "otel_workshop_fleet.py"
 
 EXPECTED_METRIC_NAMES = [
-    # trace
+    # trace (gauge proxies for datadog-migrate SUM/AVG)
+    "trace_http_request_hits",
+    "trace_http_request_errors",
+    "trace_http_request_duration",
     "trace_http_client_errors",
     "trace_spans_finished",
     "trace_dns_lookup_duration",
@@ -12,6 +15,8 @@ EXPECTED_METRIC_NAMES = [
     "container_cpu_user",
     "container_cpu_system",
     "container_cpu_shares",
+    "container_memory_usage",
+    "container_memory_limit",
     "container_filesystem_usage",
     "container_restarts",
     "container_oom_events",

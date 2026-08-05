@@ -152,7 +152,7 @@
         "title": "Trace errors",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*} by {service}.as_count()",
+            "q": "avg:trace.http.request.errors{*} by {service}",
             "display_type": "line"
           }
         ]
@@ -170,7 +170,7 @@
         "title": "HTTP hits context",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*} by {service}.as_count()",
+            "q": "avg:trace.http.request.hits{*} by {service}",
             "display_type": "line"
           }
         ]

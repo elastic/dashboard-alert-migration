@@ -12,9 +12,11 @@ match workshop Grafana / **native PROMQL**: ``http_requests_total`` (counter) an
 
 - **workshop.entity_id** on the resource plus **entity_id** on metric attributes (logical id; breakdowns use ``service.name`` in PromQL).
 - **operation_errors_total** — counter with **reason** (mirrors ``operation_errors_total{reason=...}``).
-- **Datadog rate-shaped infra metrics** (net/disk/container bytes & ops) are emitted as **gauges** (per-tick
-  rate proxies), not OTel counters. ``datadog-migrate`` often approximates ``.as_rate()`` with
-  ``MAX``/``MIN``/``SUM``, which ES|QL rejects on ``counter_long`` (see
+- **Datadog rate-shaped infra metrics** (net/disk/container bytes & ops) and **APM proxy metrics**
+  (``trace_http_request_hits``, errors, DNS/HTTP duration) are emitted as **gauges** (per-tick
+  rate/value proxies), not OTel counters/histograms. ``datadog-migrate`` often approximates
+  ``.as_rate()`` / ``.as_count()`` with ``MAX``/``MIN``/``SUM``, which ES|QL rejects on
+  ``counter_long``, and ``AVG`` rejects histogram-typed fields (see
   elastic/observability-migration-platform#148). Gauge typing keeps those workshop panels green.
 
 Parent process only supervises; workers are spawned with this same file + "worker" + JSON spec
@@ -195,35 +197,36 @@ def _run_worker(spec: dict[str, str]) -> int:
 
     # Datadog-style metric *names* for mig-to-kbn ``otel`` profile (``.`` → ``_`` in ES|QL), so migrated
     # ``assets/datadog/dashboards/*.json`` panels resolve fields under ``metrics-generic.otel-*``.
-    trace_hits = meter.create_counter(
+    # Gauges (not counters/histograms): SUM/AVG from datadog-migrate fail on counter_long / histogram.
+    trace_hits = meter.create_gauge(
         "trace_http_request_hits",
         unit="1",
-        description="Datadog trace.http.request.hits → trace_http_request_hits",
+        description="Datadog trace.http.request.hits → trace_http_request_hits (gauge count proxy)",
     )
-    trace_errors = meter.create_counter(
+    trace_errors = meter.create_gauge(
         "trace_http_request_errors",
         unit="1",
-        description="Datadog trace.http.request.errors → trace_http_request_errors",
+        description="Datadog trace.http.request.errors → trace_http_request_errors (gauge count proxy)",
     )
-    trace_dur_ms = meter.create_histogram(
+    trace_dur_ms = meter.create_gauge(
         "trace_http_request_duration",
         unit="ms",
-        description="Datadog trace.http.request.duration (ms) for service-overview / error-budget panels",
+        description="Datadog trace.http.request.duration (ms) gauge proxy for avg/pXX panels",
     )
-    trace_client_errors = meter.create_counter(
+    trace_client_errors = meter.create_gauge(
         "trace_http_client_errors",
         unit="1",
-        description="Datadog trace.http.client_errors → trace_http_client_errors",
+        description="Datadog trace.http.client_errors → trace_http_client_errors (gauge count proxy)",
     )
-    trace_spans = meter.create_counter(
+    trace_spans = meter.create_gauge(
         "trace_spans_finished",
         unit="1",
-        description="Datadog trace.spans.finished → trace_spans_finished",
+        description="Datadog trace.spans.finished → trace_spans_finished (gauge count proxy)",
     )
-    trace_dns_hist = meter.create_histogram(
+    trace_dns = meter.create_gauge(
         "trace_dns_lookup_duration",
         unit="ms",
-        description="Datadog trace.dns.lookup.duration (ms) → trace_dns_lookup_duration",
+        description="Datadog trace.dns.lookup.duration (ms) → trace_dns_lookup_duration (gauge)",
     )
     # Datadog ``.as_rate()`` panels → mig often emits MAX/MIN; emit as gauges for workshop smoke.
     def ctx_switches_obs(_options: object):
@@ -852,16 +855,17 @@ def _run_worker(spec: dict[str, str]) -> int:
             "resource_name": route,
             "http.route": route,
         }
-        trace_hits.add(burst, dd_trace_attrs)
-        for _ in range(burst):
-            trace_dur_ms.record(round(rng.uniform(6.0, 220.0), 2), dd_trace_attrs)
-        if status >= 500 or (status == 429) or (rng.random() < 0.09):
-            trace_errors.add(burst if status >= 500 else 1, dd_trace_attrs)
-
-        trace_spans.add(burst, {"service.name": service})
-        if status >= 500 or (status == 429) or (rng.random() < 0.09):
-            trace_client_errors.add(1, {"service.name": service, "http.route": route})
-        trace_dns_hist.record(round(rng.uniform(0.5, 80.0), 2), {"service.name": service})
+        # Gauge proxies: set last-tick values (SUM/AVG-friendly; not counter_long / histogram).
+        trace_hits.set(float(burst), dd_trace_attrs)
+        trace_dur_ms.set(round(rng.uniform(6.0, 220.0), 2), dd_trace_attrs)
+        err_n = float(burst if status >= 500 else (1 if status == 429 or rng.random() < 0.09 else 0))
+        trace_errors.set(err_n, {**dd_trace_attrs, "http.status_code": str(status)})
+        trace_spans.set(float(burst), {"service.name": service})
+        trace_client_errors.set(
+            1.0 if (status >= 500 or status == 429 or rng.random() < 0.09) else 0.0,
+            {"service.name": service, "http.route": route},
+        )
+        trace_dns.set(round(rng.uniform(0.5, 80.0), 2), {"service.name": service})
 
         for _ in range(burst):
             duration_s = round(rng.uniform(0.006, 0.42), 4)
