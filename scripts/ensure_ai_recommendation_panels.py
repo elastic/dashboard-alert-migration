@@ -93,7 +93,7 @@ Produce concise markdown (max ~35 lines): (1) what to validate first on PromQL-s
 dashboard IP accelerates metrics adoption. Keep advice generic.""",
     "datadog": """You are an Elastic Observability specialist helping existing Elastic customers
 adopt metrics on Observability Serverless. Workshop context: same OTLP path; Datadog-shaped boards
-(Service overview, host CPU/memory) via datadog-migrate --field-profile otel; monitors become disabled rule drafts.
+(Service overview, host CPU/memory) via datadog-migrate workshop field profile; monitors become disabled rule drafts.
 Produce concise markdown (max ~35 lines): (1) what to validate first, (2) OTel attrs vs DD tags,
 (3) monitor→rule governance, (4) why DD exports accelerate metrics adoption on Elastic. Keep advice generic.""",
 }

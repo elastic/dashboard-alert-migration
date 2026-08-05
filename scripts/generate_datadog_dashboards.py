@@ -36,7 +36,7 @@ DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
         "Service overview",
         "Service-level HTTP duration, hits, errors, Apdex-style score, plus host CPU/memory proxies and a few dependency spans (client, servlet, gRPC, DB).",
         "The first board Datadog shops open for metrics adoption — prove OTel-mapped service metrics land on Elastic and owners can still see golden signals in one place.",
-        "Queries use Datadog-style names; workshop migrate uses `--field-profile otel`.",
+        "Queries use Datadog-style names; workshop migrate uses ``field-profile-workshop-otel.yaml``.",
         [
             ("HTTP duration by service", "avg:trace.http.request.duration{*} by {service}"),
             ("HTTP hits (count)", "avg:trace.http.request.hits{*}"),

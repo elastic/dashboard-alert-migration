@@ -13,11 +13,12 @@ match workshop Grafana / **native PROMQL**: ``http_requests_total`` (counter) an
 - **workshop.entity_id** on the resource plus **entity_id** on metric attributes (logical id; breakdowns use ``service.name`` in PromQL).
 - **operation_errors_total** — counter with **reason** (mirrors ``operation_errors_total{reason=...}``).
 - **Datadog rate-shaped infra metrics** (net/disk/container bytes & ops) and **APM proxy metrics**
-  (``trace_http_request_hits``, errors, DNS/HTTP duration) are emitted as **gauges** (per-tick
-  rate/value proxies), not OTel counters/histograms. ``datadog-migrate`` often approximates
+  (``dd_trace_http_request_hits``, errors, DNS/HTTP duration) are emitted as **gauges** under
+  ``dd_trace_*`` names (workshop field profile). Fresh names avoid sticky ``counter_long`` /
+  histogram mappings from earlier lab runs. ``datadog-migrate`` often approximates
   ``.as_rate()`` / ``.as_count()`` with ``MAX``/``MIN``/``SUM``, which ES|QL rejects on
   ``counter_long``, and ``AVG`` rejects histogram-typed fields (see
-  elastic/observability-migration-platform#148). Gauge typing keeps those workshop panels green.
+  elastic/observability-migration-platform#148).
 
 Parent process only supervises; workers are spawned with this same file + "worker" + JSON spec
 so `pkill -f otel_workshop_fleet.py` stops the whole fleet.
@@ -195,38 +196,38 @@ def _run_worker(spec: dict[str, str]) -> int:
         description="Synthetic operation errors (workshop) with Prometheus-style name for dashboard parity",
     )
 
-    # Datadog-style metric *names* for mig-to-kbn ``otel`` profile (``.`` → ``_`` in ES|QL), so migrated
-    # ``assets/datadog/dashboards/*.json`` panels resolve fields under ``metrics-generic.otel-*``.
-    # Gauges (not counters/histograms): SUM/AVG from datadog-migrate fail on counter_long / histogram.
+    # Datadog-style metric *names* for workshop field profile
+    # ``assets/datadog/field-profile-workshop-otel.yaml`` (``dd_trace_*`` gauges).
+    # Fresh names avoid sticky ``counter_long`` / histogram mappings from earlier lab emits.
     trace_hits = meter.create_gauge(
-        "trace_http_request_hits",
+        "dd_trace_http_request_hits",
         unit="1",
-        description="Datadog trace.http.request.hits → trace_http_request_hits (gauge count proxy)",
+        description="Datadog trace.http.request.hits → dd_trace_http_request_hits (gauge)",
     )
     trace_errors = meter.create_gauge(
-        "trace_http_request_errors",
+        "dd_trace_http_request_errors",
         unit="1",
-        description="Datadog trace.http.request.errors → trace_http_request_errors (gauge count proxy)",
+        description="Datadog trace.http.request.errors → dd_trace_http_request_errors (gauge)",
     )
     trace_dur_ms = meter.create_gauge(
-        "trace_http_request_duration",
+        "dd_trace_http_request_duration",
         unit="ms",
-        description="Datadog trace.http.request.duration (ms) gauge proxy for avg/pXX panels",
+        description="Datadog trace.http.request.duration (ms) → dd_trace_http_request_duration",
     )
     trace_client_errors = meter.create_gauge(
-        "trace_http_client_errors",
+        "dd_trace_http_client_errors",
         unit="1",
-        description="Datadog trace.http.client_errors → trace_http_client_errors (gauge count proxy)",
+        description="Datadog trace.http.client.errors → dd_trace_http_client_errors (gauge)",
     )
     trace_spans = meter.create_gauge(
-        "trace_spans_finished",
+        "dd_trace_spans_finished",
         unit="1",
-        description="Datadog trace.spans.finished → trace_spans_finished (gauge count proxy)",
+        description="Datadog trace.spans.finished → dd_trace_spans_finished (gauge)",
     )
     trace_dns = meter.create_gauge(
-        "trace_dns_lookup_duration",
+        "dd_trace_dns_lookup_duration",
         unit="ms",
-        description="Datadog trace.dns.lookup.duration (ms) → trace_dns_lookup_duration (gauge)",
+        description="Datadog trace.dns.lookup.duration → dd_trace_dns_lookup_duration (gauge)",
     )
     # Datadog ``.as_rate()`` panels → mig often emits MAX/MIN; emit as gauges for workshop smoke.
     def ctx_switches_obs(_options: object):

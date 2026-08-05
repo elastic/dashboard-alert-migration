@@ -80,7 +80,7 @@ fi
   --source files \
   --input-dir "${STAGE}" \
   --output-dir "${OUT}" \
-  --field-profile otel \
+  --field-profile "${ROOT}/assets/datadog/field-profile-workshop-otel.yaml" \
   --logs-index "logs-*" \
   "${ES_ES_ARGS[@]}" \
   --upload \

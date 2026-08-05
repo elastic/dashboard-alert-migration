@@ -7,7 +7,7 @@ Use this in the Datadog→Elastic migration narrative: same OTLP you would dual-
 landing in Elastic’s managed collector instead of Datadog intake.
 
 Log fields are shaped for the workshop **Log error spike** board after ``datadog-migrate
---field-profile otel``:
+datadog-migrate --field-profile workshop-otel``:
 
   status:error|warn  → log.level == "error"|"warn"   (lowercase severity_text)
   @http.url… / http.url → http.url
@@ -226,43 +226,40 @@ def main() -> int:
             env=env,
         )
 
-        # Extra source:* rows every few ticks so Security / Apache / Nginx panels light up.
-        if n % 2 == 0:
-            _emit_log(
-                loggers["security"],
-                level="error" if rng.random() < 0.4 else "warn",
-                body="security proxy denied request (workshop synthetic)",
-                route=route,
-                method=method,
-                status=403 if status < 500 else status,
-                duration_ms=duration_ms,
-                service="security",
-                env=env,
-            )
-        if n % 3 == 0:
-            _emit_log(
-                loggers["apache"],
-                level="error" if status >= 500 else "info",
-                body="apache access/error (workshop synthetic)",
-                route=route,
-                method=method,
-                status=status,
-                duration_ms=duration_ms,
-                service="apache",
-                env=env,
-            )
-        if n % 2 == 1:
-            _emit_log(
-                loggers["nginx"],
-                level="info" if status < 500 else "error",
-                body="nginx access (workshop synthetic)",
-                route=route,
-                method=method,
-                status=status,
-                duration_ms=duration_ms,
-                service="nginx",
-                env=env,
-            )
+        # source:* panels map to service.name — emit every tick so Apache/Nginx/Security stay green.
+        _emit_log(
+            loggers["security"],
+            level="error" if rng.random() < 0.35 else "warn",
+            body="security proxy denied request (workshop synthetic)",
+            route=route,
+            method=method,
+            status=403 if status < 500 else status,
+            duration_ms=duration_ms,
+            service="security",
+            env=env,
+        )
+        _emit_log(
+            loggers["apache"],
+            level="error" if status >= 500 or rng.random() < 0.25 else "info",
+            body="apache access/error (workshop synthetic)",
+            route=route,
+            method=method,
+            status=status,
+            duration_ms=duration_ms,
+            service="apache",
+            env=env,
+        )
+        _emit_log(
+            loggers["nginx"],
+            level="info" if status < 500 else "error",
+            body="nginx access (workshop synthetic)",
+            route=route,
+            method=method,
+            status=status,
+            duration_ms=duration_ms,
+            service="nginx",
+            env=env,
+        )
 
         time.sleep(interval)
 

@@ -2,7 +2,8 @@
 """
 Validate workshop Datadog dashboard JSON under assets/datadog/dashboards/.
 
-Uses the same planning + translation path as datadog-migrate with --field-profile otel.
+Uses the same planning + translation path as Lab 2
+(``assets/datadog/field-profile-workshop-otel.yaml``).
 Exits non-zero if any leaf panel is not_feasible, requires_manual, or skipped.
 
 Usage (from repo root):
@@ -54,7 +55,7 @@ def main() -> int:
         print(f"ERROR: not a directory: {d}", file=sys.stderr)
         return 1
 
-    fm = load_profile("otel")
+    fm = load_profile(str(REPO / "assets" / "datadog" / "field-profile-workshop-otel.yaml"))
     files = sorted(d.glob("*.json"))
     if not files:
         print(f"ERROR: no *.json under {d}", file=sys.stderr)

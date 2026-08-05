@@ -1,0 +1,64 @@
+# Workshop Datadog → Elastic field profile (OTLP / mOTLP).
+# Extends the built-in otel tag map with:
+#   - dd_trace_* gauge metric names (avoid sticky counter_long / histogram mappings)
+#   - http.url → http.route (workshop logs emit http.route reliably)
+
+name: workshop_otel
+metric_index: metrics-*
+logs_index: logs-*
+timestamp_field: "@timestamp"
+metrics_dataset_filter: ""
+logs_dataset_filter: ""
+
+metric_map:
+  trace.http.request.hits: dd_trace_http_request_hits
+  trace.http.request.errors: dd_trace_http_request_errors
+  trace.http.request.duration: dd_trace_http_request_duration
+  trace.http.client.errors: dd_trace_http_client_errors
+  trace.spans.finished: dd_trace_spans_finished
+  trace.dns.lookup.duration: dd_trace_dns_lookup_duration
+
+tag_map:
+  "@http.url_details.path": http.route
+  availability_zone: cloud.availability_zone
+  cluster: k8s.cluster.name
+  container_id: container.id
+  container_name: container.name
+  daemonset: k8s.daemonset.name
+  datacenter: cloud.region
+  deployment: k8s.deployment.name
+  env: deployment.environment
+  host: host.name
+  http.url: http.route
+  http.url_details.path: http.route
+  image_name: container.image.name
+  image_tag: container.image.tag
+  kube_cluster_name: k8s.cluster.name
+  kube_container_name: k8s.container.name
+  kube_daemon_set: k8s.daemonset.name
+  kube_deployment: k8s.deployment.name
+  kube_namespace: k8s.namespace.name
+  kube_node: k8s.node.name
+  kube_replica_set: k8s.replicaset.name
+  kube_service: k8s.service.name
+  kube_stateful_set: k8s.statefulset.name
+  kubernetes_cluster: k8s.cluster.name
+  namespace: k8s.namespace.name
+  namespace_name: k8s.namespace.name
+  node: k8s.node.name
+  node_name: k8s.node.name
+  pod: k8s.pod.name
+  pod_name: k8s.pod.name
+  pod_phase: k8s.pod.phase
+  region: cloud.region
+  replicaset: k8s.replicaset.name
+  service: service.name
+  source: service.name
+  statefulset: k8s.statefulset.name
+  status: log.level
+  version: service.version
+  zone: cloud.availability_zone
+
+metric_prefix: ""
+metric_suffix: ""
+tag_prefix: ""
