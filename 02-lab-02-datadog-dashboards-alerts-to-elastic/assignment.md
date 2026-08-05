@@ -121,18 +121,39 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-**Lab goal:** adopt **10** Datadog-shaped metric dashboards + **4** monitors (rules imported **disabled**) onto Elastic.
+**Lab goal:** move **10** Datadog-shaped metric dashboards **+ 4 monitors** onto Elastic with **one command** — Elastic’s published migration path (`datadog-migrate`), as Kibana dashboards and alert **drafts**.
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:14px 0;align-items:stretch;">
+<div style="border:1px solid #cbd5e1;border-radius:10px;padding:12px;background:#f8fafc;text-align:center;">
+<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;color:#64748b;">Source</div>
+<div style="font-size:1.1rem;font-weight:700;margin-top:4px;color:#0f172a;">10 boards</div>
+<div style="font-size:0.8rem;color:#475569;margin-top:2px;">+ 4 monitors<br/><code>assets/datadog/</code></div>
+</div>
+<div style="border:1px solid #93c5fd;border-radius:10px;padding:12px;background:#eff6ff;text-align:center;">
+<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;color:#64748b;">Migrate</div>
+<div style="font-size:1.1rem;font-weight:700;margin-top:4px;color:#1d4ed8;">datadog-migrate</div>
+<div style="font-size:0.8rem;color:#475569;margin-top:2px;">OTLP check → upload → AI notes</div>
+</div>
+<div style="border:1px solid #86efac;border-radius:10px;padding:12px;background:#f0fdf4;text-align:center;">
+<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;color:#64748b;">Result</div>
+<div style="font-size:1.1rem;font-weight:700;margin-top:4px;color:#166534;">Kibana</div>
+<div style="font-size:0.8rem;color:#475569;margin-top:2px;">Dashboards · rules · AI notes<br/>on live <code>metrics-*</code></div>
+</div>
+</div>
 
 ```bash
 bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh
 ```
 
+Expect a few minutes. The script confirms OTLP is flowing, runs **`datadog-migrate --upload`**, publishes **4** monitor drafts (**disabled**), and seeds **AI notes** on each board.
+
 ## Verify
 
-In **Elastic Serverless**:
+Open the **Elastic Serverless** tab:
 
-- **Dashboards** — charts from **`metrics-*`**; scroll to the bottom for **AI notes** (`workshop-ai-rec-datadog`)
-- **Observability → Rules** — four workshop rules (imported **disabled**)
+1. **Dashboards** — e.g. **Service overview**; charts use **`metrics-*`**
+2. Scroll to the **bottom** for **AI notes** (`workshop-ai-rec-datadog`)
+3. **Observability → Rules** — **four** workshop rules (**disabled** until you enable them)
 
 ## Optional
 
