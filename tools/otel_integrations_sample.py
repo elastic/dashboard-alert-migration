@@ -6,6 +6,9 @@ Emits gauges named for the otel field profile (``nginx.net.request_per_s`` →
 ``nginx_net_request_per_s``) so migrated NGINX / Postgres / RabbitMQ / Redis /
 MySQL / Apache / Docker / Kubernetes boards can paint without real agents.
 
+Redis Overview needs extra dimensions the Datadog board groups on:
+``command`` / ``name`` (slowlog panels) and ``key`` (key-length + dashboard filter).
+
 Usage (workshop VM)::
 
   source ~/.bashrc
@@ -134,6 +137,14 @@ def main() -> int:
     hosts = ("workshop-integrations-01", "workshop-integrations-02")
     queues = ("orders", "notifications", "billing")
     pods = ("nginx-7f8d9", "postgres-0", "redis-master-0", "rabbitmq-0")
+    redis_commands = (
+        ("GET", "user:session"),
+        ("SET", "cart:checkout"),
+        ("HGET", "catalog:item"),
+        ("ZADD", "leaderboard"),
+        ("LPUSH", "jobs:queue"),
+    )
+    redis_keys = ("user:session", "cart:checkout", "catalog:item", "jobs:queue", "cache:homepage")
 
     def make_callback(instr: str):
         def _cb(_options: object):
@@ -141,7 +152,10 @@ def main() -> int:
             # Multi-series for common group-bys on integration boards
             if instr.startswith("rabbitmq_queue_"):
                 for q in queues:
-                    yield Observation(_value_for(instr, now, rng), {"queue": q, "host": hosts[0]})
+                    yield Observation(
+                        _value_for(instr, now, rng),
+                        {"queue": q, "host.name": hosts[0], "host": hosts[0]},
+                    )
                 return
             if instr.startswith("kubernetes_") or instr.startswith("kubernetes_state_"):
                 for pod in pods:
@@ -150,19 +164,69 @@ def main() -> int:
                         {
                             "k8s.pod.name": pod,
                             "k8s.namespace.name": "default",
+                            "kube_namespace": "default",
+                            "pod_name": pod,
+                            "host.name": hosts[0],
                             "host": hosts[0],
                         },
                     )
                 return
             if instr.startswith("docker_"):
-                for cname in ("nginx", "postgres", "redis", "rabbitmq"):
+                for cname, image in (
+                    ("nginx", "nginx:1.25"),
+                    ("postgres", "postgres:16"),
+                    ("redis", "redis:7"),
+                    ("rabbitmq", "rabbitmq:3.13"),
+                ):
                     yield Observation(
                         _value_for(instr, now, rng),
-                        {"container.name": cname, "host": hosts[0]},
+                        {
+                            "container.name": cname,
+                            "container_name": cname,
+                            "docker_image": image,
+                            "host.name": hosts[0],
+                            "host": hosts[0],
+                        },
+                    )
+                return
+            # Redis Overview: slowlog by {name,command}; key length by {key}; host filters.
+            if instr.startswith("redis_slowlog_"):
+                for host in hosts:
+                    for command, name in redis_commands:
+                        yield Observation(
+                            _value_for(instr, now + hash(command) % 9, rng),
+                            {
+                                "host.name": host,
+                                "host": host,
+                                "command": command,
+                                "name": name,
+                            },
+                        )
+                return
+            if instr == "redis_key_length" or instr.startswith("redis_key_"):
+                for host in hosts:
+                    for key in redis_keys:
+                        yield Observation(
+                            _value_for(instr, now + hash(key) % 11, rng),
+                            {
+                                "host.name": host,
+                                "host": host,
+                                "key": key,
+                            },
+                        )
+                return
+            if instr.startswith("redis_"):
+                for host in hosts:
+                    yield Observation(
+                        _value_for(instr, now, rng),
+                        {"host.name": host, "host": host},
                     )
                 return
             for host in hosts:
-                yield Observation(_value_for(instr, now, rng), {"host": host})
+                yield Observation(
+                    _value_for(instr, now, rng),
+                    {"host.name": host, "host": host},
+                )
 
         return _cb
 

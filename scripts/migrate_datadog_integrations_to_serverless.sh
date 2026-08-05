@@ -45,6 +45,7 @@ mkdir -p "${OUT}"
 MIG_ARGS=(
   --input-dir "${STAGE}"
   --output-dir "${OUT}"
+  --field-profile otel
   --kibana-url "${KIBANA_URL}"
   --kibana-api-key "${KIBANA_KEY}"
   --upload
