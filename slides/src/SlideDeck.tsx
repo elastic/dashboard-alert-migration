@@ -498,8 +498,7 @@ export function SlideDeck() {
             </div>
             <div className="text-center font-mono text-[10px] leading-relaxed text-zinc-500 sm:max-w-md sm:text-left sm:text-xs">
               <p className="text-zinc-400">
-                Upstream feedback — <span className="text-zinc-300">Subham</span> and team ship the metrics
-                adoption / migration stack in{" "}
+                Upstream feedback — open Issues or PRs on the metrics adoption / migration stack in{" "}
                 <a
                   href={UPSTREAM_REPOS[0].repoUrl}
                   target="_blank"
@@ -508,7 +507,7 @@ export function SlideDeck() {
                 >
                   {UPSTREAM_REPOS[0].label}
                 </a>
-                ; open{" "}
+                {" "}(
                 <a
                   href={UPSTREAM_REPOS[0].issuesUrl}
                   target="_blank"
@@ -516,8 +515,8 @@ export function SlideDeck() {
                   className="text-[var(--primary)] underline decoration-white/20 underline-offset-2 hover:decoration-[var(--primary)]"
                 >
                   Issues
-                </a>{" "}
-                or{" "}
+                </a>
+                ,{" "}
                 <a
                   href={UPSTREAM_REPOS[0].pullsUrl}
                   target="_blank"
@@ -526,7 +525,7 @@ export function SlideDeck() {
                 >
                   PRs
                 </a>
-                . Compiler:{" "}
+                ). Compiler:{" "}
                 <a
                   href={UPSTREAM_REPOS[1].repoUrl}
                   target="_blank"
