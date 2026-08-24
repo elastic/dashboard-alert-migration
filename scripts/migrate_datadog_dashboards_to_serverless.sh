@@ -80,7 +80,7 @@ fi
   --source files \
   --input-dir "${STAGE}" \
   --output-dir "${OUT}" \
-  --field-profile otel \
+  --field-profile "${ROOT}/assets/datadog/field-profile-workshop-otel.yaml" \
   --logs-index "logs-*" \
   "${ES_ES_ARGS[@]}" \
   --upload \
@@ -125,4 +125,4 @@ echo "==> Done."
 echo "    Dashboards: Elastic Serverless → search for migrated Datadog titles + **Metrics adoption — AI notes**"
 echo "    Monitor IR summary: ${OUT}/alerts/monitor_migration_results.json (or monitor_migration_results.json) + published rules from build/elastic-alerts/"
 echo "    Rules: Observability → Rules — workshop imports are created **disabled**; enable/edit queries in the UI."
-echo "    AI notes: refresh **Metrics adoption — AI notes** or **Service overview**; Workflows schedule every 10m."
+echo "    AI notes: scroll to the bottom of each Datadog board, or open **Metrics adoption — AI notes**."

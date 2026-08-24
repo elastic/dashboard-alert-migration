@@ -1,40 +1,21 @@
 {
   "title": "Error budget view",
-  "description": "Error budget view \u2014 metrics adoption workshop board (What & why note at top).",
+  "description": "Error budget view \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "widgets": [
-    {
-      "definition": {
-        "type": "note",
-        "content": "### What this dashboard shows\nError and hit volume, breakdowns by service/resource/status, burn-style hit series, and latency alongside errors.\n\n### Why it matters for metrics adoption\nError-budget thinking is a common metrics-adoption goal; this board shows how Datadog-shaped monitors and charts can drive the same conversation on Elastic.",
-        "background_color": "white",
-        "font_size": "14",
-        "text_align": "left",
-        "show_tick": false,
-        "tick_pos": "50%",
-        "tick_edge": "left",
-        "vertical_align": "top"
-      },
-      "layout": {
-        "x": 0,
-        "y": 0,
-        "width": 12,
-        "height": 3
-      }
-    },
     {
       "definition": {
         "type": "timeseries",
         "title": "HTTP errors total",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*}.as_count()",
+            "q": "avg:trace.http.request.errors{*}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 3,
+        "y": 0,
         "width": 6,
         "height": 4
       }
@@ -45,14 +26,14 @@
         "title": "HTTP hits total",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*}.as_count()",
+            "q": "avg:trace.http.request.hits{*}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 3,
+        "y": 0,
         "width": 6,
         "height": 4
       }
@@ -63,14 +44,14 @@
         "title": "Errors by service",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*} by {service}.as_count()",
+            "q": "avg:trace.http.request.errors{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 7,
+        "y": 4,
         "width": 6,
         "height": 4
       }
@@ -81,14 +62,14 @@
         "title": "Errors by resource",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*} by {resource_name}.as_count()",
+            "q": "avg:trace.http.request.errors{*} by {resource_name}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 7,
+        "y": 4,
         "width": 6,
         "height": 4
       }
@@ -99,14 +80,14 @@
         "title": "5xx rate proxy",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*} by {http.status_code}.as_count()",
+            "q": "avg:trace.http.request.errors{*} by {http.status_code}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 11,
+        "y": 8,
         "width": 6,
         "height": 4
       }
@@ -117,14 +98,14 @@
         "title": "Client errors",
         "requests": [
           {
-            "q": "sum:trace.http.client.errors{*} by {service}.as_count()",
+            "q": "avg:trace.http.client.errors{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 11,
+        "y": 8,
         "width": 6,
         "height": 4
       }
@@ -135,14 +116,14 @@
         "title": "Failed spans",
         "requests": [
           {
-            "q": "sum:trace.spans.finished{*} by {service}",
+            "q": "avg:trace.spans.finished{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 15,
+        "y": 12,
         "width": 6,
         "height": 4
       }
@@ -153,14 +134,14 @@
         "title": "Error budget burn (hits)",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*} by {service}.as_count()",
+            "q": "avg:trace.http.request.hits{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 15,
+        "y": 12,
         "width": 6,
         "height": 4
       }
@@ -178,7 +159,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 19,
+        "y": 16,
         "width": 6,
         "height": 4
       }
@@ -196,7 +177,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 19,
+        "y": 16,
         "width": 6,
         "height": 4
       }
@@ -207,14 +188,14 @@
         "title": "Log-style error spike",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*} by {host}.as_count()",
+            "q": "avg:trace.http.request.errors{*} by {host}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 23,
+        "y": 20,
         "width": 6,
         "height": 4
       }
@@ -225,14 +206,14 @@
         "title": "Availability proxy \u2014 hits",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*} by {host}.as_count()",
+            "q": "avg:trace.http.request.hits{*} by {host}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 23,
+        "y": 20,
         "width": 6,
         "height": 4
       }

@@ -12,6 +12,13 @@ match workshop Grafana / **native PROMQL**: ``http_requests_total`` (counter) an
 
 - **workshop.entity_id** on the resource plus **entity_id** on metric attributes (logical id; breakdowns use ``service.name`` in PromQL).
 - **operation_errors_total** — counter with **reason** (mirrors ``operation_errors_total{reason=...}``).
+- **Datadog rate-shaped infra metrics** (net/disk/container bytes & ops) and **APM proxy metrics**
+  (``dd_trace_http_request_hits``, errors, DNS/HTTP duration) are emitted as **gauges** under
+  ``dd_trace_*`` names (workshop field profile). Fresh names avoid sticky ``counter_long`` /
+  histogram mappings from earlier lab runs. ``datadog-migrate`` often approximates
+  ``.as_rate()`` / ``.as_count()`` with ``MAX``/``MIN``/``SUM``, which ES|QL rejects on
+  ``counter_long``, and ``AVG`` rejects histogram-typed fields (see
+  elastic/observability-migration-platform#148).
 
 Parent process only supervises; workers are spawned with this same file + "worker" + JSON spec
 so `pkill -f otel_workshop_fleet.py` stops the whole fleet.
@@ -189,64 +196,186 @@ def _run_worker(spec: dict[str, str]) -> int:
         description="Synthetic operation errors (workshop) with Prometheus-style name for dashboard parity",
     )
 
-    # Datadog-style metric *names* for mig-to-kbn ``otel`` profile (``.`` → ``_`` in ES|QL), so migrated
-    # ``assets/datadog/dashboards/*.json`` panels resolve fields under ``metrics-generic.otel-*``.
-    trace_hits = meter.create_counter(
-        "trace_http_request_hits",
+    # Datadog-style metric *names* for workshop field profile
+    # ``assets/datadog/field-profile-workshop-otel.yaml`` (``dd_trace_*`` gauges).
+    # Fresh names avoid sticky ``counter_long`` / histogram mappings from earlier lab emits.
+    trace_hits = meter.create_gauge(
+        "dd_trace_http_request_hits",
         unit="1",
-        description="Datadog trace.http.request.hits → trace_http_request_hits",
+        description="Datadog trace.http.request.hits → dd_trace_http_request_hits (gauge)",
     )
-    trace_errors = meter.create_counter(
-        "trace_http_request_errors",
+    trace_errors = meter.create_gauge(
+        "dd_trace_http_request_errors",
         unit="1",
-        description="Datadog trace.http.request.errors → trace_http_request_errors",
+        description="Datadog trace.http.request.errors → dd_trace_http_request_errors (gauge)",
     )
-    trace_dur_ms = meter.create_histogram(
-        "trace_http_request_duration",
+    trace_dur_ms = meter.create_gauge(
+        "dd_trace_http_request_duration",
         unit="ms",
-        description="Datadog trace.http.request.duration (ms) for service-overview / error-budget panels",
+        description="Datadog trace.http.request.duration (ms) → dd_trace_http_request_duration",
     )
-    trace_client_errors = meter.create_counter(
-        "trace_http_client_errors",
+    trace_client_errors = meter.create_gauge(
+        "dd_trace_http_client_errors",
         unit="1",
-        description="Datadog trace.http.client_errors → trace_http_client_errors",
+        description="Datadog trace.http.client.errors → dd_trace_http_client_errors (gauge)",
     )
-    trace_spans = meter.create_counter(
-        "trace_spans_finished",
+    trace_spans = meter.create_gauge(
+        "dd_trace_spans_finished",
         unit="1",
-        description="Datadog trace.spans.finished → trace_spans_finished",
+        description="Datadog trace.spans.finished → dd_trace_spans_finished (gauge)",
     )
-    trace_dns_hist = meter.create_histogram(
-        "trace_dns_lookup_duration",
+    trace_dns = meter.create_gauge(
+        "dd_trace_dns_lookup_duration",
         unit="ms",
-        description="Datadog trace.dns.lookup.duration (ms) → trace_dns_lookup_duration",
+        description="Datadog trace.dns.lookup.duration → dd_trace_dns_lookup_duration (gauge)",
     )
-    ctx_switches = meter.create_counter(
+    # Extra APM companions used on Service overview / Latency / Apdex boards.
+    trace_http_client_dur = meter.create_gauge(
+        "trace_http_client_duration",
+        unit="ms",
+        description="Datadog trace.http.client.duration → trace_http_client_duration",
+    )
+    trace_servlet_hits = meter.create_gauge(
+        "trace_servlet_request_hits",
+        unit="1",
+        description="Datadog trace.servlet.request.hits → trace_servlet_request_hits (gauge)",
+    )
+    trace_servlet_dur = meter.create_gauge(
+        "trace_servlet_request_duration",
+        unit="ms",
+        description="Datadog trace.servlet.request.duration → trace_servlet_request_duration",
+    )
+    trace_grpc_dur = meter.create_gauge(
+        "trace_grpc_client_duration",
+        unit="ms",
+        description="Datadog trace.grpc.client.duration → trace_grpc_client_duration",
+    )
+    trace_postgres_dur = meter.create_gauge(
+        "trace_postgres_query_duration",
+        unit="ms",
+        description="Datadog trace.postgres.query.duration → trace_postgres_query_duration",
+    )
+    # Datadog ``.as_rate()`` panels → mig often emits MAX/MIN; emit as gauges for workshop smoke.
+    def ctx_switches_obs(_options: object):
+        yield Observation(float(rng.randint(1_200, 48_000)))
+
+    meter.create_observable_gauge(
         "system_cpu_context_switches",
         unit="1",
-        description="Datadog system.cpu.context_switches → system_cpu_context_switches",
+        description="Datadog system.cpu.context_switches (gauge rate proxy for workshop)",
+        callbacks=[ctx_switches_obs],
     )
-    net_bytes_sent = meter.create_counter("system_net_bytes_sent", unit="By", description="system.net.bytes_sent")
-    net_bytes_rcvd = meter.create_counter("system_net_bytes_rcvd", unit="By", description="system.net.bytes_rcvd")
-    net_retrans = meter.create_counter(
-        "system_net_tcp_retrans_segs", unit="1", description="system.net.tcp.retrans_segs"
+
+    def _net_ifaces():
+        return ("eth0", "ens5", "ens6")
+
+    def _disk_devs():
+        return ("/dev/xvda", "/dev/nvme0n1", "/dev/sda")
+
+    def net_bytes_sent_obs(_options: object):
+        for iface in _net_ifaces():
+            yield Observation(float(rng.uniform(80_000, 5_000_000)), {"interface": iface})
+
+    def net_bytes_rcvd_obs(_options: object):
+        for iface in _net_ifaces():
+            yield Observation(float(rng.uniform(120_000, 6_000_000)), {"interface": iface})
+
+    def net_retrans_obs(_options: object):
+        yield Observation(float(rng.randint(0, 8)))
+
+    def net_udp_err_obs(_options: object):
+        yield Observation(float(rng.randint(0, 3)))
+
+    def net_pkt_in_obs(_options: object):
+        for iface in _net_ifaces():
+            yield Observation(float(rng.uniform(2_000, 90_000)), {"interface": iface})
+
+    def net_pkt_out_obs(_options: object):
+        for iface in _net_ifaces():
+            yield Observation(float(rng.uniform(2_200, 95_000)), {"interface": iface})
+
+    def net_listen_ovf_obs(_options: object):
+        yield Observation(float(rng.randint(0, 2)))
+
+    def net_err_in_obs(_options: object):
+        for iface in _net_ifaces():
+            yield Observation(float(rng.randint(0, 4)), {"interface": iface})
+
+    def net_err_out_obs(_options: object):
+        for iface in _net_ifaces():
+            yield Observation(float(rng.randint(0, 3)), {"interface": iface})
+
+    meter.create_observable_gauge(
+        "system_net_bytes_sent", unit="By", description="system.net.bytes_sent (gauge rate proxy)", callbacks=[net_bytes_sent_obs]
     )
-    net_udp_err = meter.create_counter("system_net_udp_in_errors", unit="1", description="system.net.udp.in_errors")
-    net_pkt_in = meter.create_counter(
-        "system_net_packets_in_count", unit="1", description="system.net.packets_in.count"
+    meter.create_observable_gauge(
+        "system_net_bytes_rcvd", unit="By", description="system.net.bytes_rcvd (gauge rate proxy)", callbacks=[net_bytes_rcvd_obs]
     )
-    net_pkt_out = meter.create_counter(
-        "system_net_packets_out_count", unit="1", description="system.net.packets_out.count"
+    meter.create_observable_gauge(
+        "system_net_tcp_retrans_segs",
+        unit="1",
+        description="system.net.tcp.retrans_segs (gauge rate proxy)",
+        callbacks=[net_retrans_obs],
     )
-    net_listen_ovf = meter.create_counter(
-        "system_net_tcp_listen_overflows", unit="1", description="system.net.tcp.listen_overflows"
+    meter.create_observable_gauge(
+        "system_net_udp_in_errors",
+        unit="1",
+        description="system.net.udp.in_errors (gauge rate proxy)",
+        callbacks=[net_udp_err_obs],
     )
-    net_err_in = meter.create_counter("system_net_errors_in", unit="1", description="system.net.errors_in")
-    net_err_out = meter.create_counter("system_net_errors_out", unit="1", description="system.net.errors_out")
-    disk_rb = meter.create_counter("system_disk_read_bytes", unit="By", description="system.disk.read_bytes")
-    disk_wb = meter.create_counter("system_disk_write_bytes", unit="By", description="system.disk.write_bytes")
-    disk_rop = meter.create_counter("system_disk_read_ops", unit="1", description="system.disk.read_ops")
-    disk_wop = meter.create_counter("system_disk_write_ops", unit="1", description="system.disk.write_ops")
+    meter.create_observable_gauge(
+        "system_net_packets_in_count",
+        unit="1",
+        description="system.net.packets_in.count (gauge rate proxy)",
+        callbacks=[net_pkt_in_obs],
+    )
+    meter.create_observable_gauge(
+        "system_net_packets_out_count",
+        unit="1",
+        description="system.net.packets_out.count (gauge rate proxy)",
+        callbacks=[net_pkt_out_obs],
+    )
+    meter.create_observable_gauge(
+        "system_net_tcp_listen_overflows",
+        unit="1",
+        description="system.net.tcp.listen_overflows (gauge rate proxy)",
+        callbacks=[net_listen_ovf_obs],
+    )
+    meter.create_observable_gauge(
+        "system_net_errors_in", unit="1", description="system.net.errors_in (gauge rate proxy)", callbacks=[net_err_in_obs]
+    )
+    meter.create_observable_gauge(
+        "system_net_errors_out", unit="1", description="system.net.errors_out (gauge rate proxy)", callbacks=[net_err_out_obs]
+    )
+
+    def disk_rb_obs(_options: object):
+        for dev in _disk_devs():
+            yield Observation(float(rng.uniform(50_000, 2_800_000)), {"device": dev})
+
+    def disk_wb_obs(_options: object):
+        for dev in _disk_devs():
+            yield Observation(float(rng.uniform(40_000, 2_200_000)), {"device": dev})
+
+    def disk_rop_obs(_options: object):
+        for dev in _disk_devs():
+            yield Observation(float(rng.uniform(20, 900)), {"device": dev})
+
+    def disk_wop_obs(_options: object):
+        for dev in _disk_devs():
+            yield Observation(float(rng.uniform(25, 950)), {"device": dev})
+
+    meter.create_observable_gauge(
+        "system_disk_read_bytes", unit="By", description="system.disk.read_bytes (gauge rate proxy)", callbacks=[disk_rb_obs]
+    )
+    meter.create_observable_gauge(
+        "system_disk_write_bytes", unit="By", description="system.disk.write_bytes (gauge rate proxy)", callbacks=[disk_wb_obs]
+    )
+    meter.create_observable_gauge(
+        "system_disk_read_ops", unit="1", description="system.disk.read_ops (gauge rate proxy)", callbacks=[disk_rop_obs]
+    )
+    meter.create_observable_gauge(
+        "system_disk_write_ops", unit="1", description="system.disk.write_ops (gauge rate proxy)", callbacks=[disk_wop_obs]
+    )
 
     def tcp_conn_obs(_options: object):
         phase = (time.time() - t0) / 19.0 + (seed % 7) * 0.31
@@ -468,10 +597,10 @@ def _run_worker(spec: dict[str, str]) -> int:
         callbacks=[swap_pct_free_obs],
     )
 
-    mem_page_faults = meter.create_counter(
+    mem_page_faults = meter.create_gauge(
         "system_mem_page_faults",
         unit="1",
-        description="system.mem.page_faults → system_mem_page_faults",
+        description="system.mem.page_faults → system_mem_page_faults (gauge rate proxy)",
     )
 
     def disk_io_obs(_options: object):
@@ -568,9 +697,44 @@ def _run_worker(spec: dict[str, str]) -> int:
 
     def apdex_obs(_options: object):
         phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
-        yield Observation(max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase))))
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        yield Observation(score)
+
+    def apdex_satisfied_obs(_options: object):
+        phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        # Count proxies so avg:app.apdex.satisfied panels light up (not counter_long).
+        yield Observation(float(max(1, int(40 * score + rng.uniform(-2, 2)))))
+
+    def apdex_tolerating_obs(_options: object):
+        phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        yield Observation(float(max(0, int(18 * (1.0 - score) + rng.uniform(0, 3)))))
+
+    def apdex_frustrated_obs(_options: object):
+        phase = (time.time() - t0) / 67.0 + (seed % 11) * 0.09
+        score = max(0.55, min(0.995, 0.82 + 0.14 * math.sin(phase)))
+        yield Observation(float(max(0, int(12 * (1.0 - score) + rng.uniform(0, 2)))))
 
     meter.create_observable_gauge("app_apdex_score", unit="1", description="app.apdex.score proxy", callbacks=[apdex_obs])
+    meter.create_observable_gauge(
+        "app_apdex_satisfied",
+        unit="1",
+        description="Datadog app.apdex.satisfied → app_apdex_satisfied (gauge count proxy)",
+        callbacks=[apdex_satisfied_obs],
+    )
+    meter.create_observable_gauge(
+        "app_apdex_tolerating",
+        unit="1",
+        description="Datadog app.apdex.tolerating → app_apdex_tolerating (gauge count proxy)",
+        callbacks=[apdex_tolerating_obs],
+    )
+    meter.create_observable_gauge(
+        "app_apdex_frustrated",
+        unit="1",
+        description="Datadog app.apdex.frustrated → app_apdex_frustrated (gauge count proxy)",
+        callbacks=[apdex_frustrated_obs],
+    )
 
     def container_cpu_obs(_options: object):
         yield Observation(
@@ -588,16 +752,56 @@ def _run_worker(spec: dict[str, str]) -> int:
         description="container.cpu.usage proxy (by container.name)",
         callbacks=[container_cpu_obs],
     )
-    container_throttled = meter.create_counter(
+    container_throttled = meter.create_gauge(
         "container_cpu_throttled",
         unit="1",
-        description="container.cpu.throttled proxy",
+        description="container.cpu.throttled proxy (gauge)",
     )
-    container_net_rcvd = meter.create_counter(
-        "container_net_rcvd", unit="By", description="container.net.rcvd → container_net_rcvd"
+
+    def container_mem_usage_obs(_options: object):
+        # Datadog container.memory.usage → container_memory_usage (Container CPU throttle board).
+        phase = (time.time() - t0) / 55.0 + (seed % 7) * 0.11
+        for cname, base in ((f"{service}-main", 512e6), (f"{service}-sidecar", 128e6)):
+            v = base + base * 0.35 * (0.5 + 0.5 * math.sin(phase)) + rng.uniform(-8e6, 8e6)
+            yield Observation(max(32e6, v), {"container.name": cname})
+
+    def container_mem_limit_obs(_options: object):
+        # Datadog container.memory.limit → container_memory_limit.
+        yield Observation(1024e6, {"container.name": f"{service}-main"})
+        yield Observation(256e6, {"container.name": f"{service}-sidecar"})
+
+    meter.create_observable_gauge(
+        "container_memory_usage",
+        unit="By",
+        description="Datadog container.memory.usage → container_memory_usage",
+        callbacks=[container_mem_usage_obs],
     )
-    container_net_sent = meter.create_counter(
-        "container_net_sent", unit="By", description="container.net.sent → container_net_sent"
+    meter.create_observable_gauge(
+        "container_memory_limit",
+        unit="By",
+        description="Datadog container.memory.limit → container_memory_limit",
+        callbacks=[container_mem_limit_obs],
+    )
+
+    def container_net_rcvd_obs(_options: object):
+        for cname in (f"{service}-main", f"{service}-sidecar"):
+            yield Observation(float(rng.uniform(8_000, 420_000)), {"container.name": cname})
+
+    def container_net_sent_obs(_options: object):
+        for cname in (f"{service}-main", f"{service}-sidecar"):
+            yield Observation(float(rng.uniform(9_000, 480_000)), {"container.name": cname})
+
+    meter.create_observable_gauge(
+        "container_net_rcvd",
+        unit="By",
+        description="container.net.rcvd (gauge rate proxy)",
+        callbacks=[container_net_rcvd_obs],
+    )
+    meter.create_observable_gauge(
+        "container_net_sent",
+        unit="By",
+        description="container.net.sent (gauge rate proxy)",
+        callbacks=[container_net_sent_obs],
     )
 
     def container_cpu_user_obs(_options):
@@ -651,16 +855,26 @@ def _run_worker(spec: dict[str, str]) -> int:
         callbacks=[container_fs_usage_obs],
     )
 
-    # K8s-semantic proxy — no real pod lifecycle behind these; included so migrated panels render data
-    container_restarts = meter.create_counter(
+    # K8s-semantic proxy — gauge values so SUM/MAX panels from datadog-migrate render
+    def container_restarts_obs(_options: object):
+        for cname in (f"{service}-main", f"{service}-sidecar"):
+            yield Observation(float(rng.randint(0, 3)), {"container.name": cname})
+
+    def container_oom_obs(_options: object):
+        for cname in (f"{service}-main", f"{service}-sidecar"):
+            yield Observation(float(rng.randint(0, 1)), {"container.name": cname})
+
+    meter.create_observable_gauge(
         "container_restarts",
         unit="1",
-        description="Datadog kubernetes.containers.restarts → container_restarts (K8s-semantic proxy)",
+        description="Datadog kubernetes.containers.restarts (gauge proxy)",
+        callbacks=[container_restarts_obs],
     )
-    container_oom = meter.create_counter(
+    meter.create_observable_gauge(
         "container_oom_events",
         unit="1",
-        description="Datadog kubernetes.containers.oom_killed → container_oom_events (K8s-semantic proxy)",
+        description="Datadog kubernetes.containers.oom_killed (gauge proxy)",
+        callbacks=[container_oom_obs],
     )
 
     routes = ["/health", "/api/v1/orders", "/api/v1/users", "/api/v1/cart", "/readyz"]
@@ -703,51 +917,34 @@ def _run_worker(spec: dict[str, str]) -> int:
             "resource_name": route,
             "http.route": route,
         }
-        trace_hits.add(burst, dd_trace_attrs)
-        for _ in range(burst):
-            trace_dur_ms.record(round(rng.uniform(6.0, 220.0), 2), dd_trace_attrs)
-        if status >= 500 or (status == 429) or (rng.random() < 0.09):
-            trace_errors.add(burst if status >= 500 else 1, dd_trace_attrs)
-
-        trace_spans.add(burst, {"service.name": service})
-        if status >= 500 or (status == 429) or (rng.random() < 0.09):
-            trace_client_errors.add(1, {"service.name": service, "http.route": route})
-        trace_dns_hist.record(round(rng.uniform(0.5, 80.0), 2), {"service.name": service})
+        # Gauge proxies: set last-tick values (SUM/AVG-friendly; not counter_long / histogram).
+        trace_hits.set(float(burst), dd_trace_attrs)
+        trace_dur_ms.set(round(rng.uniform(6.0, 220.0), 2), dd_trace_attrs)
+        err_n = float(burst if status >= 500 else (1 if status == 429 or rng.random() < 0.09 else 0))
+        trace_errors.set(err_n, {**dd_trace_attrs, "http.status_code": str(status)})
+        trace_spans.set(float(burst), {"service.name": service})
+        trace_client_errors.set(
+            1.0 if (status >= 500 or status == 429 or rng.random() < 0.09) else 0.0,
+            {"service.name": service, "http.route": route},
+        )
+        trace_dns.set(round(rng.uniform(0.5, 80.0), 2), {"service.name": service})
+        trace_http_client_dur.set(round(rng.uniform(8.0, 160.0), 2), {"service.name": service})
+        trace_servlet_hits.set(float(burst), {"service.name": service})
+        trace_servlet_dur.set(round(rng.uniform(5.0, 90.0), 2), {"service.name": service})
+        trace_grpc_dur.set(round(rng.uniform(4.0, 120.0), 2), {"service.name": service})
+        trace_postgres_dur.set(round(rng.uniform(3.0, 75.0), 2), {"service.name": service})
 
         for _ in range(burst):
             duration_s = round(rng.uniform(0.006, 0.42), 4)
             duration_hist.record(duration_s, base_attrs)
             req_counter.add(1, base_attrs)
 
-        ctx_switches.add(rng.randint(1_200, 48_000), {})
-        mem_page_faults.add(rng.randint(50, 4_000), {})
+        mem_page_faults.set(float(rng.randint(50, 4_000)), {})
 
-        iface = rng.choice(("eth0", "ens5", "ens6"))
-        dev = rng.choice(("/dev/xvda", "/dev/nvme0n1", "/dev/sda"))
-        net_bytes_sent.add(int(rng.uniform(80_000, 5_000_000)), {"interface": iface})
-        net_bytes_rcvd.add(int(rng.uniform(120_000, 6_000_000)), {"interface": iface})
-        net_retrans.add(rng.randint(0, 8), {})
-        net_udp_err.add(rng.randint(0, 3), {})
-        net_pkt_in.add(int(rng.uniform(2_000, 90_000)), {"interface": iface})
-        net_pkt_out.add(int(rng.uniform(2_200, 95_000)), {"interface": iface})
-        net_listen_ovf.add(rng.randint(0, 2), {})
-        net_err_in.add(rng.randint(0, 4), {"interface": iface})
-        net_err_out.add(rng.randint(0, 3), {"interface": iface})
+        # Net/disk/container rate proxies are observable gauges (callbacks above).
 
-        disk_rb.add(int(rng.uniform(50_000, 2_800_000)), {"device": dev})
-        disk_wb.add(int(rng.uniform(40_000, 2_200_000)), {"device": dev})
-        disk_rop.add(int(rng.uniform(20, 900)), {"device": dev})
-        disk_wop.add(int(rng.uniform(25, 950)), {"device": dev})
-
-        container_throttled.add(rng.randint(0, 4), {"container.name": f"{service}-main"})
-        container_throttled.add(rng.randint(0, 2), {"container.name": f"{service}-sidecar"})
-        for cname in (f"{service}-main", f"{service}-sidecar"):
-            container_net_rcvd.add(int(rng.uniform(8_000, 420_000)), {"container.name": cname})
-            container_net_sent.add(int(rng.uniform(9_000, 480_000)), {"container.name": cname})
-            if rng.random() < 0.05:
-                container_restarts.add(1, {"container.name": cname})
-            if rng.random() < 0.02:
-                container_oom.add(1, {"container.name": cname})
+        container_throttled.set(float(rng.randint(0, 4)), {"container.name": f"{service}-main"})
+        container_throttled.set(float(rng.randint(0, 2)), {"container.name": f"{service}-sidecar"})
 
         if status >= 500 or rng.random() < err_prob:
             reason = (

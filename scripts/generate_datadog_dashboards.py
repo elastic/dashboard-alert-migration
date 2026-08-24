@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Generate sample Datadog dashboard JSON (many widgets with `q` queries) for the workshop.
 
-Each dashboard opens with a **note** widget (**What / Why**) that migrates to Kibana markdown,
-then twelve timeseries widgets. mig-to-kbn ``parse_metric_query`` expects ``by {tags}`` *before*
-``.as_rate()`` / ``.as_count()``.
+Each dashboard has twelve timeseries widgets. Agent Builder AI notes are attached post-migrate
+(``scripts/ensure_ai_recommendation_panels.py``), not as static note widgets. mig-to-kbn
+``parse_metric_query`` expects ``by {tags}`` *before* ``.as_rate()`` / ``.as_count()``.
 """
 from __future__ import annotations
 
@@ -28,36 +28,24 @@ def normalize_datadog_q_for_mig_parser(q: str) -> str:
     return q
 
 
-def what_why_md(*, what: str, why: str, note: str = "") -> str:
-    parts = [
-        "### What this dashboard shows",
-        what.strip(),
-        "",
-        "### Why it matters for metrics adoption",
-        why.strip(),
-    ]
-    if note.strip():
-        parts.extend(["", "### Notes", note.strip()])
-    return "\n".join(parts)
-
-
 # filename, title, what, why, optional note, list of (widget_title, query)
+# what/why/note are author documentation only (not emitted into JSON).
 DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
     (
         "01-service-overview.json",
         "Service overview",
         "Service-level HTTP duration, hits, errors, Apdex-style score, plus host CPU/memory proxies and a few dependency spans (client, servlet, gRPC, DB).",
         "The first board Datadog shops open for metrics adoption — prove OTel-mapped service metrics land on Elastic and owners can still see golden signals in one place.",
-        "Queries use Datadog-style names; workshop migrate uses `--field-profile otel`.",
+        "Queries use Datadog-style names; workshop migrate uses ``field-profile-workshop-otel.yaml``.",
         [
             ("HTTP duration by service", "avg:trace.http.request.duration{*} by {service}"),
-            ("HTTP hits (count)", "sum:trace.http.request.hits{*}.as_count()"),
-            ("HTTP errors", "sum:trace.http.request.errors{*}.as_count()"),
+            ("HTTP hits (count)", "avg:trace.http.request.hits{*}"),
+            ("HTTP errors", "avg:trace.http.request.errors{*}"),
             ("Duration p95 by resource", "p95:trace.http.request.duration{*} by {resource_name}"),
-            ("Hits by resource", "sum:trace.http.request.hits{*}.as_count() by {resource_name}"),
+            ("Hits by resource", "avg:trace.http.request.hits{*} by {resource_name}"),
             ("Apdex-style score", "avg:app.apdex.score{*} by {service}"),
             ("Client request duration", "avg:trace.http.client.duration{*} by {service}"),
-            ("Servlet hits", "sum:trace.servlet.request.hits{*}.as_count() by {service}"),
+            ("Servlet hits", "avg:trace.servlet.request.hits{*} by {service}"),
             ("RPC latency", "avg:trace.grpc.client.duration{*} by {service}"),
             ("DB statement duration", "avg:trace.postgres.query.duration{*} by {service}"),
             ("CPU user (host proxy)", "avg:system.cpu.user{*} by {host}"),
@@ -71,18 +59,18 @@ DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
         "Error-budget thinking is a common metrics-adoption goal; this board shows how Datadog-shaped monitors and charts can drive the same conversation on Elastic.",
         "",
         [
-            ("HTTP errors total", "sum:trace.http.request.errors{*}.as_count()"),
-            ("HTTP hits total", "sum:trace.http.request.hits{*}.as_count()"),
-            ("Errors by service", "sum:trace.http.request.errors{*}.as_count() by {service}"),
-            ("Errors by resource", "sum:trace.http.request.errors{*}.as_count() by {resource_name}"),
-            ("5xx rate proxy", "sum:trace.http.request.errors{*}.as_count() by {http.status_code}"),
-            ("Client errors", "sum:trace.http.client.errors{*}.as_count() by {service}"),
-            ("Failed spans", "sum:trace.spans.finished{*} by {service}"),
-            ("Error budget burn (hits)", "sum:trace.http.request.hits{*}.as_count() by {service}"),
+            ("HTTP errors total", "avg:trace.http.request.errors{*}"),
+            ("HTTP hits total", "avg:trace.http.request.hits{*}"),
+            ("Errors by service", "avg:trace.http.request.errors{*} by {service}"),
+            ("Errors by resource", "avg:trace.http.request.errors{*} by {resource_name}"),
+            ("5xx rate proxy", "avg:trace.http.request.errors{*} by {http.status_code}"),
+            ("Client errors", "avg:trace.http.client.errors{*} by {service}"),
+            ("Failed spans", "avg:trace.spans.finished{*} by {service}"),
+            ("Error budget burn (hits)", "avg:trace.http.request.hits{*} by {service}"),
             ("Latency on errors", "avg:trace.http.request.duration{*} by {service}"),
             ("Apdex", "avg:app.apdex.score{*} by {service}"),
-            ("Log-style error spike", "sum:trace.http.request.errors{*}.as_count() by {host}"),
-            ("Availability proxy — hits", "sum:trace.http.request.hits{*}.as_count() by {host}"),
+            ("Log-style error spike", "avg:trace.http.request.errors{*} by {host}"),
+            ("Availability proxy — hits", "avg:trace.http.request.hits{*} by {host}"),
         ],
     ),
     (
@@ -114,14 +102,14 @@ DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
         "",
         [
             ("Apdex by service", "avg:app.apdex.score{*} by {service}"),
-            ("Satisfied count", "sum:app.apdex.satisfied{*}.as_count() by {service}"),
-            ("Tolerating", "sum:app.apdex.tolerating{*}.as_count() by {service}"),
-            ("Frustrated", "sum:app.apdex.frustrated{*}.as_count() by {service}"),
+            ("Satisfied count", "avg:app.apdex.satisfied{*} by {service}"),
+            ("Tolerating", "avg:app.apdex.tolerating{*} by {service}"),
+            ("Frustrated", "avg:app.apdex.frustrated{*} by {service}"),
             ("HTTP duration vs apdex", "avg:trace.http.request.duration{*} by {service}"),
-            ("Hits for context", "sum:trace.http.request.hits{*}.as_count() by {service}"),
-            ("Errors vs satisfaction", "sum:trace.http.request.errors{*}.as_count() by {service}"),
+            ("Hits for context", "avg:trace.http.request.hits{*} by {service}"),
+            ("Errors vs satisfaction", "avg:trace.http.request.errors{*} by {service}"),
             ("Apdex by host", "avg:app.apdex.score{*} by {host}"),
-            ("Request rate", "sum:trace.http.request.hits{*}.as_rate() by {service}"),
+            ("Request rate", "avg:trace.http.request.hits{*} by {service}"),
             ("p95 alongside apdex", "p95:trace.http.request.duration{*} by {service}"),
             ("Client apdex proxy", "avg:trace.http.client.duration{*} by {service}"),
             ("Resource apdex", "avg:app.apdex.score{*} by {resource_name}"),
@@ -205,7 +193,7 @@ DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
             ("Packets out", "sum:system.net.packets_out.count{*}.as_rate() by {interface}"),
             ("Connection count", "avg:system.net.tcp.connections{*} by {host}"),
             ("Listen overflows", "sum:system.net.tcp.listen_overflows{*}.as_rate() by {host}"),
-            ("HTTP traffic proxy", "sum:trace.http.request.hits{*}.as_count() by {service}"),
+            ("HTTP traffic proxy", "avg:trace.http.request.hits{*} by {service}"),
             ("DNS latency proxy", "avg:trace.dns.lookup.duration{*} by {service}"),
             ("Net errors in", "sum:system.net.errors_in{*}.as_rate() by {interface}"),
             ("Net errors out", "sum:system.net.errors_out{*}.as_rate() by {interface}"),
@@ -224,11 +212,12 @@ DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
             ("CPU system", "avg:container.cpu.system{*} by {container_name}"),
             ("Mem usage", "avg:container.memory.usage{*} by {container_name}"),
             ("Mem limit", "avg:container.memory.limit{*} by {container_name}"),
-            ("Network RX", "sum:container.net.rcvd{*}.as_rate() by {container_name}"),
-            ("Network TX", "sum:container.net.sent{*}.as_rate() by {container_name}"),
-            ("Restarts", "sum:container.restarts{*}.as_count() by {container_name}"),
+            # Gauge rate proxies in otel_workshop_fleet — avoid .as_rate()/.as_count() (MAX/MIN on counters).
+            ("Network RX", "avg:container.net.rcvd{*} by {container_name}"),
+            ("Network TX", "avg:container.net.sent{*} by {container_name}"),
+            ("Restarts", "avg:container.restarts{*} by {container_name}"),
             ("CPU shares", "avg:container.cpu.shares{*} by {container_name}"),
-            ("OOM kills", "sum:container.oom_events{*}.as_count() by {container_name}"),
+            ("OOM kills", "avg:container.oom_events{*} by {container_name}"),
             ("Filesystem usage", "avg:container.filesystem.usage{*} by {container_name}"),
         ],
     ),
@@ -247,31 +236,13 @@ DASHBOARDS: list[tuple[str, str, str, str, str, list[tuple[str, str]]]] = [
             ("Security proxy", 'logs("source:security").index("*").rollup("count").by("service")'),
             ("Apache errors", 'logs("source:apache").index("*").rollup("count").by("host")'),
             ("Nginx access proxy", 'logs("source:nginx").index("*").rollup("count").by("http.url")'),
-            ("Trace errors", "sum:trace.http.request.errors{*}.as_count() by {service}"),
-            ("HTTP hits context", "sum:trace.http.request.hits{*}.as_count() by {service}"),
+            ("Trace errors", "avg:trace.http.request.errors{*} by {service}"),
+            ("HTTP hits context", "avg:trace.http.request.hits{*} by {service}"),
             ("Duration during spikes", "avg:trace.http.request.duration{*} by {service}"),
             ("Disk IO proxy", "avg:system.disk.io{*} by {host}"),
         ],
     ),
 ]
-
-
-def widget_note(content: str) -> dict:
-    """Datadog note → Kibana markdown via datadog-migrate."""
-    return {
-        "definition": {
-            "type": "note",
-            "content": content,
-            "background_color": "white",
-            "font_size": "14",
-            "text_align": "left",
-            "show_tick": False,
-            "tick_pos": "50%",
-            "tick_edge": "left",
-            "vertical_align": "top",
-        },
-        "layout": {"x": 0, "y": 0, "width": 12, "height": 3},
-    }
 
 
 def widget_timeseries(title: str, q: str) -> dict:
@@ -304,14 +275,13 @@ def build_dashboard(
     note: str,
     entries: list[tuple[str, str]],
 ) -> dict:
-    explain = what_why_md(what=what, why=why, note=note)
-    note_widget = widget_note(explain)
+    del what, why, note  # author notes only; AI analysis is attached after migrate
     timeseries = [widget_timeseries(panel_title, q) for panel_title, q in entries]
-    apply_grid_layout(timeseries, y_offset=note_widget["layout"]["height"])
+    apply_grid_layout(timeseries, y_offset=0)
     return {
         "title": title,
-        "description": f"{title} — metrics adoption workshop board (What & why note at top).",
-        "widgets": [note_widget, *timeseries],
+        "description": f"{title} — metrics adoption workshop board (AI notes attached after migrate).",
+        "widgets": timeseries,
         "template_variables": [{"name": "env", "default": "*", "prefix": "env"}],
     }
 
@@ -324,7 +294,7 @@ def main() -> None:
             json.dumps(build_dashboard(title, what, why, note, entries), indent=2) + "\n",
             encoding="utf-8",
         )
-        print("wrote", path, f"({len(entries)} timeseries + what/why note)")
+        print("wrote", path, f"({len(entries)} timeseries)")
 
 
 if __name__ == "__main__":

@@ -3,49 +3,59 @@ slug: lab-02-datadog-dashboards-alerts-to-elastic
 id: berxl591tjk4
 type: challenge
 title: Lab 2 — Adopt Datadog metric views & monitors
-teaser: One command brings 10 Datadog-shaped metric dashboards and four monitors onto Kibana.
+teaser: One command brings 10 Datadog-shaped metric dashboards and four monitors onto
+  Kibana.
 notes:
 - type: text
   contents: |
-    ## Metrics adoption — telemetry workflow
+    ## Metrics path in this lab
 
-    **Audience:** existing Elastic customers. **Purpose:** adopt **metrics** (same OTLP path as Lab 1 — Alloy → Elastic **mOTLP**):
+    Same OTLP path as Lab 1:
 
-    ```
-                      ┌──────────────────────────────┐
-                      │  Python OTLP (fleet, DD OTLP) │
-                      └──────────────┬───────────────┘
-                                     │ OTLP
-    Prometheus :12345 ──► Grafana Alloy (:4317 / :4318)
-                                     │
-                          OTLP/HTTP + Authorization
-                                     ▼
-                        Elastic managed OTLP (mOTLP)
-                                     ▼
-                        Observability Serverless project
-                                     ▼
-                    logs-*    metrics-*    traces-*
-                                     ▼
-                           Kibana (proxied :8080)
-    ```
+    - Python OTLP emitters → **Grafana Alloy**
+    - Alloy → **Elastic managed OTLP (mOTLP)**
+    - Data lands in **`logs-*`**, **`metrics-*`**, **`traces-*`**
+    - You work in **Kibana** (Elastic Serverless tab)
+- type: text
+  contents: |
+    ## What this workshop covers
+
+    1. **Metrics on Elastic** — same OTLP path as Lab 1
+    2. **Prometheus / PromQL** — covered in Lab 1
+    3. **Datadog metric IP** — **this lab:** dashboards + monitors → Kibana boards and alert drafts
+    4. **Platform depth** — ES|QL + columnar metrics where Elastic wins
+    5. **Agent Builder** — AI notes on live Datadog-migrated boards
+
+    **This lab:** theme 3 (Datadog), plus platform depth and Agent Builder.
+- type: text
+  contents: |
+    ## Why migrate dashboards instead of rebuilding?
+
+    - **One operations UI** — stop pivoting between Datadog and Kibana during incidents
+    - **Keep what you built** — Datadog monitors and metric boards are assets; migrate intent, don't redraw every chart
+    - **Draft → approve** — alerts land as Kibana rule drafts before you enable them
+    - **Less rebuild work** — bulk convert + API publish vs hand-recreating boards
 - type: text
   contents: |
     ## This lab
 
-    Accelerate metrics adoption: **10** Datadog-shaped metric dashboards (**`datadog-migrate`**) + **4** monitors → Kibana dashboards and alert **drafts**. Run **one command** in **Terminal** when the sandbox is ready.
+    **Lab 2 — Datadog metric IP → Kibana** (dashboards + monitors as **drafts**).
 
-    **Live OTLP:** **`./scripts/send_datadog_otel.sh`** (or **`tools/datadog_otel_to_elastic.py`**) — same pipeline as Lab 1.
+    | Theme | What you prove |
+    | --- | --- |
+    | Metrics on Elastic | Same OTLP → **`metrics-*`** path as Lab 1 |
+    | Datadog metric IP | **10** boards + **4** monitors via **`datadog-migrate`** |
+    | Governance | Rules imported **disabled** — review queries before enable |
+    | Agent Builder | **AI notes** on each board |
 
-    **Next slide:** mini-game while Lab 2 environments load.
+    Run **one command** in **Terminal** when the sandbox is ready.
 - type: text
   contents: |
-    ## While you wait — **O11Y Survivors**
+    ## While you wait — O11Y Survivors
 
     [Open full screen](https://poulsbopete.github.io/Vampire-Clone/) if the embed is cramped. **Controls:** arrows or WASD, space, click to start.
 
-    <div style="width:100%;max-width:100%;height:min(82vh,920px);min-height:520px;margin:0 auto;">
-    <iframe src="https://poulsbopete.github.io/Vampire-Clone/" title="O11Y Survivors (Vampire Clone)" width="100%" height="100%" style="border:0;border-radius:10px;background:#0a0a0a;display:block;" allow="fullscreen" loading="lazy"></iframe>
-    </div>
+    <iframe src="https://poulsbopete.github.io/Vampire-Clone/" title="O11Y Survivors" width="100%" height="520" style="border:0;border-radius:8px;" allow="fullscreen" loading="lazy"></iframe>
 tabs:
 - id: fsizfoyfjtag
   title: Terminal
@@ -56,7 +66,7 @@ tabs:
   title: Elastic Serverless
   type: service
   hostname: es3-api
-  path: /
+  path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
   port: 8080
   custom_request_headers:
   - key: Content-Security-Policy
@@ -72,58 +82,60 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-**Lab goal:** adopt Datadog-shaped **metric** boards and monitors onto Elastic with governance (rules imported **disabled** until you review).
+# Lab 2 — Adopt Datadog metric views & monitors
 
-When the sandbox is ready, open **Terminal** and run:
+Move **10 Datadog metric dashboards** and **4 monitors** onto Kibana with **one command** — same **OTLP → `metrics-*`** path as Lab 1. Monitors land as alert **drafts** (review before enable). **Agent Builder** AI notes guide what to validate next.
+
+## What you'll prove
+
+| Area | Outcome |
+| --- | --- |
+| **Metrics on Elastic** | Same OTLP path as Lab 1 — live `metrics-*` |
+| **Datadog metric IP** | Dashboards + monitors via `datadog-migrate` |
+| **Governance** | Rules imported **disabled** — review before enable |
+| **Agent Builder** | AI notes on each live dashboard |
+
+## How it works
+
+| Step | What happens |
+| --- | --- |
+| **Source** | 10 boards + 4 monitors in `assets/datadog/` |
+| **Migrate** | `datadog-migrate` checks OTLP, uploads dashboards, adds AI notes |
+| **Result** | Kibana dashboards, rule drafts, and AI notes on live `metrics-*` |
+
+## Run the migration
+
+Open the **Terminal** tab and run:
 
 ```bash
 bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh
 ```
 
-That single script:
+Expect **a few minutes**. The script:
 
-1. Starts (or reuses) the **OTLP** pipeline — Alloy → Elastic **mOTLP** (live **metrics**)
-2. Runs **`datadog-migrate`** on **10** Datadog JSON files in **`assets/datadog/dashboards/`** (`--field-profile otel`, uploads to Kibana)
-3. Converts **4** monitor JSON files under **`assets/datadog/`** and publishes **Rules** via **`publish_datadog_alert_drafts_kibana.py`** (imported **disabled**)
-
-The script loads **`KIBANA_URL`** and **`ES_API_KEY`** from **`~/.bashrc`** — no **`cd`** or **`source`** needed first. Use the **absolute path** above so it works even if your shell left **`/root/workshop`**.
+1. Confirms **OTLP** → **`metrics-*`**
+2. Runs **`datadog-migrate --upload`**
+3. Publishes **4** monitor drafts (**disabled** — review before enable)
+4. Seeds **Agent Builder AI notes** on each board
 
 ## Verify
 
 Open the **Elastic Serverless** tab:
 
-- **Dashboards** — titles from the Datadog exports; charts should populate from **`metrics-*`**
-- **What & why** — each board opens with a markdown note (**What this dashboard shows** / **Why it matters for metrics adoption**) migrated from the Datadog note widget
-- **Metrics adoption — AI notes** — Agent Builder markdown for Datadog-shaped metrics adoption (also on **Service overview** when attach succeeds)
-- **Observability → Rules** — four workshop rules (imported **disabled**; enable in the UI to test)
+1. **Dashboards** — open e.g. **Service overview**; charts use live **`metrics-*`**
+2. Scroll to the **bottom** for **AI notes** — what to validate next
+3. **Observability → Rules** — **four** workshop rules (**disabled** until you enable them)
 
-Optional refresh: **Management → Workflows → Metrics adoption — AI dashboard notes**, or:
+## Optional — integrations boards
 
-```bash
-python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --platform datadog --seed-now
-```
-
-## Troubleshooting
-
-| Symptom | Fix |
-| --- | --- |
-| Empty charts | `bash /root/workshop/scripts/check_workshop_otel_pipeline.sh` then `bash /root/workshop/scripts/start_workshop_otel.sh` — wait ~1 min |
-| Still empty after migrate | Re-run migrate after OTLP is healthy; `cd /root/workshop && ./scripts/sync_workshop_from_git.sh` if files are stale |
-| Script not found | **Stop** → **Start** the track (wait for challenge to finish loading) |
-| `latency_p95` compile warning | Other dashboards still upload; refresh workshop files and re-run migrate |
-
-Optional pre-upload ES\|QL validation: `WORKSHOP_MIG_ES_VALIDATE=1 bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh`
-
-## Optional — integration dashboards
-
-Migrate **eight** official Agent integration dashboards from [DataDog/integrations-core](https://github.com/DataDog/integrations-core) (see **`assets/datadog/integrations-core/ATTRIBUTION.md`**):
+Migrate **integrations-core** boards (NGINX, Postgres, RabbitMQ, …) and start sample OTLP metrics:
 
 ```bash
 bash /root/workshop/scripts/migrate_datadog_integrations_to_serverless.sh
 ```
 
-These use integration metric namespaces (`nginx.*`, `postgresql.*`, …), not the OTLP workshop fleet — expect many panels to need data mapping after migration.
+Wait ~1 minute, then open e.g. **NGINX - Overview** / **Postgres - Metrics**.
 
 ## Done
 
-**Check** passes when **`build/mig-datadog/dashboards/yaml/`** (or legacy **`yaml/`**) has **10** `*.yaml` files, **`migration_report.json`** under **`build/mig-datadog/dashboards/`** (or root), and **`build/elastic-alerts/`** has **4** `monitor-*-elastic.json` files.
+**Check** passes when **`build/mig-datadog/dashboards/yaml/`** has **10** `*.yaml` files and **`build/elastic-alerts/`** has **4** `monitor-*-elastic.json` files.

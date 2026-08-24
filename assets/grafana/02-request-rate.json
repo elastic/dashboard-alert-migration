@@ -1,7 +1,7 @@
 {
   "uid": "02-request-rate",
   "title": "Request rate by service",
-  "description": "Request rate by service \u2014 metrics adoption workshop board (What & why panel at top).",
+  "description": "Request rate by service \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,27 +26,13 @@
   },
   "panels": [
     {
-      "type": "text",
-      "title": "What & why",
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "options": {
-        "mode": "markdown",
-        "content": "### What this dashboard shows\nPer-service HTTP throughput plus **single-label** splits by route and status (multi-label `sum by` is avoided so native PromQL migrates cleanly).\n\n### Why it matters for metrics adoption\nService-scoped rate is the usual first metrics adoption check: confirm `service.name` cardinality and that teams can find *their* traffic on Elastic."
-      }
-    },
-    {
       "type": "stat",
       "title": "Requests/sec (all)",
       "gridPos": {
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -87,7 +73,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -120,7 +106,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -153,7 +139,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",

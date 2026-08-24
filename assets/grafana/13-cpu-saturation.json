@@ -1,7 +1,7 @@
 {
   "uid": "13-cpu-saturation",
   "title": "Throughput by host",
-  "description": "Throughput by host \u2014 metrics adoption workshop board (What & why panel at top).",
+  "description": "Throughput by host \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,27 +26,13 @@
   },
   "panels": [
     {
-      "type": "text",
-      "title": "What & why",
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "options": {
-        "mode": "markdown",
-        "content": "### What this dashboard shows\nHTTP request rate by `host.name` and by service \u2014 a saturation/load proxy.\n\n### Why it matters for metrics adoption\nInfra-shaped views from PromQL still matter for metrics adoption; this board maps host dimensions onto Elastic without requiring process CPU counters.\n\n### Notes\nWorkshop OTLP has no `process_cpu_seconds_total`; host throughput is the intentional stand-in."
-      }
-    },
-    {
       "type": "stat",
       "title": "Requests/sec (total)",
       "gridPos": {
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -87,7 +73,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -120,7 +106,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -153,7 +139,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",

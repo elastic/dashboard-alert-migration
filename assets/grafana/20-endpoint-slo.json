@@ -1,7 +1,7 @@
 {
   "uid": "20-endpoint-slo",
   "title": "Endpoint availability",
-  "description": "Endpoint availability \u2014 metrics adoption workshop board (What & why panel at top).",
+  "description": "Endpoint availability \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -26,27 +26,13 @@
   },
   "panels": [
     {
-      "type": "text",
-      "title": "What & why",
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "options": {
-        "mode": "markdown",
-        "content": "### What this dashboard shows\nNon-5xx success fraction over 30m with successful vs total rps.\n\n### Why it matters for metrics adoption\nA compact endpoint SLO-style metrics board for stakeholders reviewing Elastic as the system of record for availability."
-      }
-    },
-    {
       "type": "stat",
       "title": "Success ratio (30m)",
       "gridPos": {
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -87,7 +73,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 6
+        "y": 0
       },
       "datasource": {
         "type": "prometheus",
@@ -120,7 +106,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -153,7 +139,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 8
       },
       "datasource": {
         "type": "prometheus",

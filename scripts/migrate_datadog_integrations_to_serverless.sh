@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Optional Lab 2 extension: migrate real Datadog integrations-core dashboards (BSD-licensed).
-# Uses datadog-migrate with default field profile (integration metric namespaces).
-# Charts may be empty until matching integration metrics exist in Elasticsearch.
+# Optional Lab 2 extension: migrate real Datadog integrations-core dashboards (BSD-licensed)
+# and start synthetic OTLP sample metrics so charts can populate.
+# Uses datadog-migrate with default field profile (otel: nginx.net.* → nginx_net_*).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -13,6 +13,10 @@ if [ ! -d "${SRC}" ] || [ -z "$(find "${SRC}" -maxdepth 1 -name '*.json' -print 
   echo "==> No integration dashboards under ${SRC}; fetching from GitHub..."
   bash "${ROOT}/scripts/update_datadog_integrations_dashboards.sh"
 fi
+
+echo "==> Starting sample OTLP metrics for integrations-core boards..."
+bash "${ROOT}/scripts/start_workshop_integrations_otel.sh" \
+  || echo "    WARN: integrations sample emitter failed — migrate will still upload; charts may be empty." >&2
 
 MIG_VENV="${MIG_TO_KBN_VENV:-/opt/mig-to-kbn-venv}"
 DD_MIGRATE="${MIG_VENV}/bin/datadog-migrate"
@@ -41,6 +45,7 @@ mkdir -p "${OUT}"
 MIG_ARGS=(
   --input-dir "${STAGE}"
   --output-dir "${OUT}"
+  --field-profile otel
   --kibana-url "${KIBANA_URL}"
   --kibana-api-key "${KIBANA_KEY}"
   --upload
@@ -54,4 +59,5 @@ fi
 "${DD_MIGRATE}" "${MIG_ARGS[@]}"
 
 echo "OK: integration dashboards migrated to ${OUT}/yaml/ (see migration_report.json)."
-echo "    Note: nginx.* / postgresql.* metrics need integration-style data to fill charts."
+echo "    Sample data: tools/otel_integrations_sample.py → Alloy → metrics-* (nginx_*, postgresql_*, …)."
+echo "    Re-start sample only: bash scripts/start_workshop_integrations_otel.sh"

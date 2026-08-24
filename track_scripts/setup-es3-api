@@ -119,13 +119,13 @@ _clone_workshop_from_git() {
   _wait_for_dpkg_lock_optional
   _apt_get_with_retry update -y
   _apt_get_with_retry install -y --no-install-recommends git ca-certificates curl
-  _url="${WORKSHOP_GIT_URL:-https://github.com/poulsbopete/dashboard-alert-migration.git}"
-  _ref="${WORKSHOP_GIT_REF:-main}"
+  _url="${WORKSHOP_GIT_URL:-https://github.com/elastic/dashboard-alert-migration.git}"
+  _ref="${WORKSHOP_GIT_REF:-metrics-adoption-workshop}"
   _ghpath="${_url#*github.com/}"
   _ghpath="${_ghpath#*:}"
   _ghpath="${_ghpath%.git}"
   _owner_repo="$(printf '%s\n' "$_ghpath" | cut -d/ -f1-2)"
-  [[ "$_owner_repo" != *"/"* ]] && _owner_repo="poulsbopete/dashboard-alert-migration"
+  [[ "$_owner_repo" != *"/"* ]] && _owner_repo="elastic/dashboard-alert-migration"
 
   rm -rf /opt/instruqt-workshop-track /opt/_workshop_unpack
 
@@ -549,17 +549,22 @@ if [ -n "${ES_URL:-}" ] && { [ -n "${WORKSHOP_ES_API_KEY:-}" ] || [ -n "${ELASTI
 fi
 
 if [ -n "${KIBANA_URL:-}" ] && [ -n "${WORKSHOP_ES_API_KEY:-}" ]; then
-  echo "Enabling workflows:ui:enabled Kibana setting (Agent Builder recommendations workflow)..."
-  _kibana_version=$(curl -s "${KIBANA_URL}/api/status" \
-    -H "Authorization: ApiKey ${WORKSHOP_ES_API_KEY}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('version',{}).get('number','9.4.0'))" 2>/dev/null || echo "9.4.0")
-  _wf_http=$(curl -s -o /tmp/wf-setting.json -w "%{http_code}" \
-    -X PUT "${KIBANA_URL}/api/saved_objects/config/${_kibana_version}" \
-    -H "Content-Type: application/json" \
-    -H "kbn-xsrf: true" \
-    -H "x-elastic-internal-origin: kibana" \
-    -H "Authorization: ApiKey ${WORKSHOP_ES_API_KEY}" \
-    -d '{"attributes":{"workflows:ui:enabled":true}}')
-  echo "DEBUG: workflows setting → HTTP ${_wf_http}"
+  echo "Enabling workflows:ui:enabled + deploying Metrics adoption AI workflow..."
+  export KIBANA_URL ES_API_KEY="$WORKSHOP_ES_API_KEY" ES_URL
+  # Give Kibana a moment after project create before Workflows / Agent Builder APIs accept writes.
+  sleep 15
+  set +e
+  /opt/workshop-venv/bin/python3 "$TRACK_ROOT/scripts/deploy_workshop_workflows.py" \
+    metrics-adoption-recommendations.yaml \
+    | tee /tmp/workshop-workflow-deploy.log
+  /opt/workshop-venv/bin/python3 "$TRACK_ROOT/scripts/ensure_ai_recommendation_panels.py" --skip-attach \
+    | tee -a /tmp/workshop-workflow-deploy.log
+  set -e
+  echo "DEBUG: workflow deploy log → /tmp/workshop-workflow-deploy.log"
+  echo "    To seed Agent Builder text now (or after migrate):"
+  echo "      source ~/.bashrc && python3 /root/workshop/scripts/ensure_ai_recommendation_panels.py --seed-now"
+  echo "    To re-deploy / list workflows:"
+  echo "      python3 /root/workshop/scripts/deploy_workshop_workflows.py"
 fi
 
 echo "Track bootstrap complete."

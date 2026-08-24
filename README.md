@@ -13,7 +13,7 @@
 
 **Primary migration engine:** **[elastic/observability-migration-platform](https://github.com/elastic/observability-migration-platform)** (`obs-migrate`, `grafana-migrate`, `datadog-migrate`; formerly **elastic/mig-to-kbn**). Upstream docs: [architecture](https://github.com/elastic/observability-migration-platform/blob/main/docs/architecture.md), [Grafana sources](https://github.com/elastic/observability-migration-platform/blob/main/docs/sources/grafana.md), [Datadog sources](https://github.com/elastic/observability-migration-platform/blob/main/docs/sources/datadog.md).
 
-**Agent Builder AI notes (dbmonitoring pattern):** After each lab migrate, the scripts call **`scripts/ensure_ai_recommendation_panels.py --seed-now`** and deploy **`workflows/metrics-adoption-recommendations.yaml`**. That workflow uses **`POST /api/agent_builder/converse`**, indexes into **`metrics-adoption-recommendations`**, and refreshes library Markdown **`workshop-ai-rec-*`** on the **Metrics adoption — AI notes** dashboard (and optionally **Traffic overview** / **Service overview**). Skip with **`WORKSHOP_SKIP_AI_NOTES=1`**.
+**Agent Builder AI notes (dbmonitoring pattern):** After each lab migrate, the scripts call **`scripts/ensure_ai_recommendation_panels.py --seed-now`** and deploy **`workflows/metrics-adoption-recommendations.yaml`**. That workflow uses native **`ai.agent`** steps (Agent Builder), indexes into **`metrics-adoption-recommendations`**, and refreshes library Markdown **`workshop-ai-rec-*`** on **every** migrated Grafana/Datadog dashboard (plus **Metrics adoption — AI notes**). Skip with **`WORKSHOP_SKIP_AI_NOTES=1`**.
 
 This repo **vendors** an **unmodified copy** of upstream under **`mig-to-kbn/`** (directory name kept for scripts). The pinned commit is recorded in **`mig-to-kbn-upstream.lock`**. **Refresh:** **`./scripts/update_mig_to_kbn.sh`** · **Verify:** **`./scripts/verify_mig_to_kbn_upstream.sh`**. On **Instruqt**, bootstrap installs from the vendored tree when present; otherwise it clones **`https://github.com/elastic/observability-migration-platform.git`** (override with **`WORKSHOP_MIG_TO_KBN_GIT_URL`** / **`WORKSHOP_MIG_TO_KBN_GIT_REF`**). **`scripts/install_workshop_mig_to_kbn.sh`** uses **`uv`** + **Python 3.12** at **`/opt/mig-to-kbn-venv`**; compile/upload uses **`uvx kb-dashboard-cli`**.
 
@@ -32,10 +32,10 @@ Engine fixes → **[Issues](https://github.com/elastic/observability-migration-p
 
 | Lab | Adoption focus | Assets | Script | Target indices (typical) |
 | --- | --- | --- | --- | --- |
-| **Lab 1 — PromQL metric views** | Adopt Grafana-shaped metric dashboards onto Elastic | **20** dashboard JSON + **2** alert rules (`assets/grafana/alerts/`); each board has a **What & why** text panel | **`bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`**, **`traces-*`**; **`grafana-migrate --native-promql`** |
-| **Lab 2 — Datadog metric views** | Adopt Datadog-shaped metric dashboards + monitors | **10** workshop dashboards + **4** monitors; each board has a **What & why** note widget | **`bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`** via upstream **`datadog-migrate --field-profile otel`** (built-in default) |
+| **Lab 1 — PromQL metric views** | Adopt Grafana-shaped metric dashboards onto Elastic | **20** dashboard JSON + **2** alert rules (`assets/grafana/alerts/`); each board gets an **Agent Builder AI notes** markdown strip after migrate | **`bash /root/workshop/scripts/migrate_grafana_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`**, **`traces-*`**; **`grafana-migrate --native-promql`** |
+| **Lab 2 — Datadog metric views** | Adopt Datadog-shaped metric dashboards + monitors | **10** workshop dashboards + **4** monitors; each board gets an **Agent Builder AI notes** markdown strip after migrate | **`bash /root/workshop/scripts/migrate_datadog_dashboards_to_serverless.sh`** | **`metrics-*`**, **`logs-*`** via **`datadog-migrate --field-profile assets/datadog/field-profile-workshop-otel.yaml`** |
 
-**Optional Lab 2 extension:** **`scripts/migrate_datadog_integrations_to_serverless.sh`** — **8** real dashboards from [DataDog/integrations-core](https://github.com/DataDog/integrations-core) under **`assets/datadog/integrations-core/`** (refresh with **`scripts/update_datadog_integrations_dashboards.sh`**).
+**Optional Lab 2 extension:** **`scripts/migrate_datadog_integrations_to_serverless.sh`** — **8** real dashboards from [DataDog/integrations-core](https://github.com/DataDog/integrations-core) under **`assets/datadog/integrations-core/`** (refresh with **`scripts/update_datadog_integrations_dashboards.sh`**). Starts **`tools/otel_integrations_sample.py`** so **`nginx_*` / `postgresql_*` / …** fill charts via Alloy → mOTLP.
 
 Each migrate script **sources `~/.bashrc`**. Use the **absolute path** above so **`$PWD`** does not matter.
 
@@ -84,7 +84,7 @@ Both lab scripts call upstream **`grafana-migrate`** / **`datadog-migrate`** con
 
 ### Known gaps (upstream)
 
-Some panels still fail on **`counter_long`** aggregations (**SUM** / **MAX** / **MIN** on counter-typed fields). Tracked in **[observability-migration-platform#148](https://github.com/elastic/observability-migration-platform/issues/148)**. Missing **field** errors on Datadog dashboards are largely addressed by the expanded fleet emitters + **`--field-profile otel`**.
+Some Datadog panels used to fail on **`counter_long`** aggregations (**SUM** / **MAX** / **MIN**). Upstream: **[observability-migration-platform#148](https://github.com/elastic/observability-migration-platform/issues/148)**. Workshop fleet emits Datadog **rate-shaped** infra metrics as **gauges** so those panels render; HTTP/PromQL series remain counters.
 
 ## Path B — legacy workshop Python pipeline (facilitators)
 

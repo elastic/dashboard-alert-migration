@@ -4,38 +4,40 @@
 
 | | |
 | --- | --- |
-| **Purpose** | Metrics adoption on Elastic Observability |
+| **Purpose** | Metrics adoption on Elastic Observability — aligned with Elastic’s **metrics push** (Prometheus / PromQL, OTLP, columnar query) |
 | **Audience** | Existing Elastic customers |
-| **Outcome** | Teams leave able to ingest metrics via OTLP, land operational dashboards/alerts on `metrics-*`, and reuse metric dashboards they already maintain elsewhere |
+| **Outcome** | Teams leave able to ingest metrics via OTLP, run **Prometheus-class** operational views on `metrics-*`, land dashboards/alerts without a full redraw, and use Agent Builder notes to guide adoption |
 
-Earlier “Grafana customer / Datadog customer migration” framing was **placeholder positioning**. Grafana and Datadog remain in the hands-on path because they are the **most common sources of existing metric dashboard IP** — not because the invite audience is competitive displacement only.
+Earlier “Grafana customer / Datadog customer migration” framing was **placeholder positioning**. **Prometheus / PromQL** is a first-class story. Grafana and Datadog remain in the hands-on path as **common sources of metric dashboard IP**, not as the primary competitive narrative.
 
 ## Why this design (vs a greenfield metrics lab)
 
 For accounts already on Elastic, the adoption bottleneck is rarely “can Kibana draw a chart?” It is:
 
-1. **Ingest confidence** — metrics land in `metrics-*` with dimensions teams recognize  
-2. **Time-to-value** — replace months of hand-rebuild with reviewable automation  
-3. **Governance** — dashboards and alerts as drafts → human approve → enforce  
-4. **Continuity** — keep PromQL / Datadog query intent visible while ES|QL runs at query time  
+1. **Ingest confidence** — metrics land in `metrics-*` with dimensions teams recognize (OTLP / Prometheus-shaped)  
+2. **Prometheus continuity** — PromQL intent and existing boards accelerate adoption instead of a blank Lens canvas  
+3. **Time-to-value** — replace months of hand-rebuild with reviewable automation  
+4. **Platform depth** — ES|QL + columnar metrics where Elastic differentiates; PromQL where teams already live  
+5. **Governance** — dashboards and alerts as drafts → human approve → enforce  
 
-This track already exercises all four with a production Instruqt + Serverless + mOTLP spine. Reframing keeps that engine and changes the **story, invite, and facilitator language**.
+This track already exercises these with a production Instruqt + Serverless + mOTLP spine. Reframing keeps that engine and changes the **story, invite, and facilitator language**.
 
 ## Lab map (learner-facing)
 
 | Lab | Adoption job | Mechanic (unchanged) |
 | --- | --- | --- |
-| **Lab 1** | Adopt PromQL-oriented metric views onto Elastic | `migrate_grafana_dashboards_to_serverless.sh` (20 boards + alert drafts) |
-| **Lab 2** | Adopt Datadog-oriented metric views + monitors | `migrate_datadog_dashboards_to_serverless.sh` (10 boards + 4 rules) |
+| **Lab 1** | Adopt **Prometheus / PromQL**-oriented metric views onto Elastic | `migrate_grafana_dashboards_to_serverless.sh` (20 boards + alert drafts) |
+| **Lab 2** | Adopt Datadog-oriented metric views + monitors (accelerator) | `migrate_datadog_dashboards_to_serverless.sh` (10 boards + 4 rules) |
 
 Both labs validate on **live OTLP** (`metrics-*` / `logs-*` / `traces-*`), the same path customers use with Elastic managed OTLP.
 
 ## Invite principles
 
-- Lead with **metrics adoption** and **existing Elastic customers**  
-- Mention Grafana/Datadog as **optional accelerators** (bring metric assets you already have)  
+- Lead with **metrics adoption**, **Prometheus / PromQL**, and **existing Elastic customers**  
+- Position Grafana/Datadog as **accelerators** (metric IP you may already have)  
+- Call out **columnar metrics** + Agent Builder in framing and follow-up email  
 - Do not market the session as “leave Grafana/Datadog day-one” unless the account asks for that narrative  
-- Copy lives in [`docs/invite.md`](invite.md); Instruqt CTA remains the shared invite URL in slides  
+- Copy lives in [`docs/invite.md`](invite.md); Instruqt CTA remains the shared invite URL in slides
 
 ## Agent Builder AI notes (dbmonitoring pattern)
 
@@ -60,8 +62,9 @@ Skip with `WORKSHOP_SKIP_AI_NOTES=1` on migrate scripts.
 
 Learners can answer:
 
-1. How do metrics reach Elastic in this workshop (and in production OTLP terms)?  
-2. How do I get a reviewable wave of metric dashboards into Kibana without rebuilding every panel?  
-3. How do monitors become Kibana rule **drafts**, and why are they disabled on import?  
-4. What is my first 30-day metrics adoption checklist back at the account?  
-5. Where do Agent Builder metrics-adoption notes land, and how do you refresh them?  
+1. How do metrics reach Elastic in this workshop (OTLP / mOTLP), and how does that relate to a **Prometheus-era** metrics practice?  
+2. How do I get **PromQL-oriented** boards into Kibana without rebuilding every panel?  
+3. Where does Elastic differentiate (ES|QL, columnar metrics) vs continuity (PromQL / existing dashboard IP)?  
+4. How do monitors become Kibana rule **drafts**, and why are they disabled on import?  
+5. What is my first 30-day metrics adoption checklist back at the account?  
+6. Where do Agent Builder metrics-adoption notes land, and how do you refresh them?  

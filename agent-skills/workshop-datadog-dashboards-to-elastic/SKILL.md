@@ -14,7 +14,7 @@ metadata:
 ## When to use
 
 **Metrics adoption** for existing Elastic customers: bring **Datadog dashboard** exports via **[observability-migration-platform](https://github.com/elastic/observability-migration-platform)** **`datadog-migrate`**
-(**`--field-profile otel`**, upstream default) into **Kibana** on **Observability Serverless**, optionally with **Cursor** + [Elastic Agent Skills](https://github.com/elastic/agent-skills).
+(**`assets/datadog/field-profile-workshop-otel.yaml`**) into **Kibana** on **Observability Serverless**, optionally with **Cursor** + [Elastic Agent Skills](https://github.com/elastic/agent-skills).
 Legacy **`datadog_dashboard_to_elastic.py`** + **`publish_grafana_drafts_kibana.py`** remain for comparison.
 
 ## Prerequisites

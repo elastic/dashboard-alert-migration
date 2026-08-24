@@ -1,26 +1,7 @@
 {
   "title": "Apdex-style satisfaction",
-  "description": "Apdex-style satisfaction \u2014 metrics adoption workshop board (What & why note at top).",
+  "description": "Apdex-style satisfaction \u2014 metrics adoption workshop board (AI notes attached after migrate).",
   "widgets": [
-    {
-      "definition": {
-        "type": "note",
-        "content": "### What this dashboard shows\nApdex score and satisfied/tolerating/frustrated counts alongside HTTP duration, hits, and errors.\n\n### Why it matters for metrics adoption\nSatisfaction metrics are executive-friendly; adopting them on Elastic keeps product conversations on the same observability platform as logs/traces.",
-        "background_color": "white",
-        "font_size": "14",
-        "text_align": "left",
-        "show_tick": false,
-        "tick_pos": "50%",
-        "tick_edge": "left",
-        "vertical_align": "top"
-      },
-      "layout": {
-        "x": 0,
-        "y": 0,
-        "width": 12,
-        "height": 3
-      }
-    },
     {
       "definition": {
         "type": "timeseries",
@@ -34,7 +15,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 3,
+        "y": 0,
         "width": 6,
         "height": 4
       }
@@ -45,14 +26,14 @@
         "title": "Satisfied count",
         "requests": [
           {
-            "q": "sum:app.apdex.satisfied{*} by {service}.as_count()",
+            "q": "avg:app.apdex.satisfied{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 3,
+        "y": 0,
         "width": 6,
         "height": 4
       }
@@ -63,14 +44,14 @@
         "title": "Tolerating",
         "requests": [
           {
-            "q": "sum:app.apdex.tolerating{*} by {service}.as_count()",
+            "q": "avg:app.apdex.tolerating{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 7,
+        "y": 4,
         "width": 6,
         "height": 4
       }
@@ -81,14 +62,14 @@
         "title": "Frustrated",
         "requests": [
           {
-            "q": "sum:app.apdex.frustrated{*} by {service}.as_count()",
+            "q": "avg:app.apdex.frustrated{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 7,
+        "y": 4,
         "width": 6,
         "height": 4
       }
@@ -106,7 +87,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 11,
+        "y": 8,
         "width": 6,
         "height": 4
       }
@@ -117,14 +98,14 @@
         "title": "Hits for context",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*} by {service}.as_count()",
+            "q": "avg:trace.http.request.hits{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 6,
-        "y": 11,
+        "y": 8,
         "width": 6,
         "height": 4
       }
@@ -135,14 +116,14 @@
         "title": "Errors vs satisfaction",
         "requests": [
           {
-            "q": "sum:trace.http.request.errors{*} by {service}.as_count()",
+            "q": "avg:trace.http.request.errors{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 15,
+        "y": 12,
         "width": 6,
         "height": 4
       }
@@ -160,7 +141,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 15,
+        "y": 12,
         "width": 6,
         "height": 4
       }
@@ -171,14 +152,14 @@
         "title": "Request rate",
         "requests": [
           {
-            "q": "sum:trace.http.request.hits{*} by {service}.as_rate()",
+            "q": "avg:trace.http.request.hits{*} by {service}",
             "display_type": "line"
           }
         ]
       },
       "layout": {
         "x": 0,
-        "y": 19,
+        "y": 16,
         "width": 6,
         "height": 4
       }
@@ -196,7 +177,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 19,
+        "y": 16,
         "width": 6,
         "height": 4
       }
@@ -214,7 +195,7 @@
       },
       "layout": {
         "x": 0,
-        "y": 23,
+        "y": 20,
         "width": 6,
         "height": 4
       }
@@ -232,7 +213,7 @@
       },
       "layout": {
         "x": 6,
-        "y": 23,
+        "y": 20,
         "width": 6,
         "height": 4
       }

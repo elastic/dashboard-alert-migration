@@ -36,6 +36,8 @@ HEADERS = {
     "kbn-xsrf": "true",
     "x-elastic-internal-origin": "kibana",
     "Content-Type": "application/json",
+    # Required for public Workflows REST APIs on Serverless / recent Kibana.
+    "Elastic-Api-Version": os.environ.get("KIBANA_ELASTIC_API_VERSION", "2023-10-31"),
 }
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -134,13 +136,29 @@ def deploy_workflow(filename: str):
         entry = {"yaml": yaml_content}
         action = "create"
 
+    # Prefer bulk create (dbmonitoring / older Serverless), then single-create endpoint.
     result, status = _http_json("POST", "/api/workflows", {"workflows": [entry]})
-    if status not in (200, 201) or not isinstance(result, dict):
-        print(f"  WARN: {filename} deploy failed HTTP {status}: {str(result)[:400]}")
+    if status not in (200, 201) or not isinstance(result, dict) or result.get("_http_error"):
+        print(
+            f"  · bulk POST /api/workflows → HTTP {status}: {str(result)[:240]}; "
+            "trying POST /api/workflows/workflow ..."
+        )
+        single_body = {"yaml": yaml_content}
+        if existing_id:
+            single_body["id"] = existing_id
+        result, status = _http_json("POST", "/api/workflows/workflow", single_body)
+        if status in (200, 201) and isinstance(result, dict) and not result.get("_http_error"):
+            wid = result.get("id") or existing_id
+            print(f"  ✓ {filename}: {action} via /api/workflows/workflow (id={wid})")
+            if wid:
+                print(f"    {KIBANA_URL}/app/management/insightsAndAlerting/workflows/{wid}")
+            return wid
+        print(f"  WARN: {filename} deploy failed HTTP {status}: {str(result)[:500]}")
         return None
+
     failed = result.get("failed") or []
     if failed:
-        print(f"  WARN: {filename}: API failure: {failed[0]!s}"[:300])
+        print(f"  WARN: {filename}: API failure: {failed[0]!s}"[:400])
         return None
     created = result.get("created") or []
     updated = result.get("updated") or []
@@ -153,7 +171,13 @@ def deploy_workflow(filename: str):
     if existing_id:
         print(f"  ✓ {filename}: {action} (id={existing_id})")
         return existing_id
-    print(f"  WARN: {filename}: unexpected response keys={list(result.keys())}")
+    # Some builds return the workflow object directly (not wrapped in created/updated).
+    if result.get("id"):
+        wid = result["id"]
+        print(f"  ✓ {filename}: {action} (id={wid})")
+        print(f"    {KIBANA_URL}/app/management/insightsAndAlerting/workflows/{wid}")
+        return wid
+    print(f"  WARN: {filename}: unexpected response keys={list(result.keys())} body={str(result)[:300]}")
     return None
 
 
